@@ -1,0 +1,15 @@
+.tableFixHead{ 
+    position: sticky; 
+    top: 37.2px; 
+    z-index: 1; 
+} 
+
+.smallFixHead{
+    position: sticky; 
+    top: 75.2px; 
+    z-index: 2; 
+}
+
+main{
+    margin: 2%;
+}
