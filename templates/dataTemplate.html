@@ -31,9 +31,11 @@
                         <thead class="tableFixHead bg-body">
                             <tr>
                                 {%for field in data.fields%}
-                                <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, '{{field.name}}');">{{field.name}}</th>
+                                <th scope="col">{%if field.filtrable%}<input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, '{{field.name}}');">{%endif%}{{field.name}}</th>
                                 {%endfor%}
-                                <th scope="col"></th>
+                                <th scope="col" style="width:10%;">
+                                    <a href="/new/{{data.name}}" class="btn btn-success" style="width:100%;">New {{data.name}}</a>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -42,7 +44,7 @@
                                     {%for field in data.fields%}
                                         <td name="{{field.name}}">{{'{{item[' + loop.index|string + ']}}' + field.unit}}</td>
                                     {%endfor%}
-                                    <td><a href="/edit/{{data.name}}/{{'item[0]'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'item[0]'}}" method="post"><button type="submit" class="btn btn-success" style="width:100%;">Copy</button></form>
+                                    <td><a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-success" style="width:100%;">Copy</button></form>
                                         {%for child in data.children%}
                                             <a href="/new/{{child.name}}" class="btn btn-warning" style="width:100%;">New {{child.name}}</a>
                                         {%endfor%}

@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import os
 import addUser
+import json
 
 app = Flask(__name__)
 
@@ -30,10 +31,10 @@ def isAuthorised():
 def notFound(e):
     return render_template('404.html', ), 404
 @app.errorhandler(401)
-def notFound(e):
+def authFailed(e):
     return render_template('401.html', ), 401
 @app.errorhandler(500)
-def notFound(e):
+def serverError(e):
     return render_template('500.html', ), 500
 
 @app.route('/login', methods=['POST'])
@@ -60,7 +61,7 @@ def home():
     if isAuthorised() == False:
         return render_template('auth.html', encoding='utf-8')
     return render_template('Home.html', encoding='utf-8')
-
+    
 @app.route('/Data', methods=['GET'])
 def Data():
     if isAuthorised() == False:
@@ -70,7 +71,41 @@ def Data():
     cur.execute('SELECT rowid, * FROM testType')
     data = cur.fetchall()
     return render_template('Data.html', rows=data, encoding='utf-8')
+    
+@app.route('/new/testType', methods=['GET'])
+def testType():
+    if isAuthorised() == False:
+        abort(401)
+    return render_template('testType.html', encoding='utf-8')
+    
+@app.route('/new/testType/submit', methods=['POST'])
+def testTypeSubmit():
+    if isAuthorised() == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    data = dict(request.form)
+    rowid = data['rowid']
+    data.pop('rowid', None)
+    if rowid == '':
+        placeholders = ', '.join('?' * len(list(data.values())))
+        sql = 'INSERT INTO testType VALUES ({})'.format(placeholders)
+        cur.execute(sql, list(data.values()))
+    else:
+        sets = []
+        for key in data:
+            sets.append(key + ' = ?')
+        sql = 'UPDATE testType SET {} WHERE rowid=?'.format(', '.join(sets))
+        print(sql)
+        cur.execute(sql, list(data.values()).append(rowid))
+    conn.commit()
+    return redirect('/')
 
+@app.route('/edit/testType/<rowid>', methods=['GET'])
+def testTypeEdit(rowid):
+    if isAuthorised() == False:
+        abort(401)
+    return render_template('testType.html', rowid=rowid, encoding='utf-8')
 
 if __name__ == '__main__':
     import os

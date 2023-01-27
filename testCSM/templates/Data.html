@@ -37,9 +37,11 @@
                                 
                                 <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, 'text1');">text1</th>
                                 
-                                <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, 'text2');">text2</th>
+                                <th scope="col">text2</th>
                                 
-                                <th scope="col"></th>
+                                <th scope="col" style="width:10%;">
+                                    <a href="/new/testType" class="btn btn-success" style="width:100%;">New testType</a>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -50,7 +52,7 @@
                                     
                                         <td name="text2">{{item[2]}}</td>
                                     
-                                    <td><a href="/edit/testType/item[0]" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/item[0]" method="post"><button type="submit" class="btn btn-success" style="width:100%;">Copy</button></form>
+                                    <td><a href="/edit/testType/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-success" style="width:100%;">Copy</button></form>
                                         
                                     </td>
                                 </tr>

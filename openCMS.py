@@ -8,6 +8,8 @@ environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(
 
 sqliteTypes = ['INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC']
 
+#here a whole bunch of python code templates to add to the skeleton file as needed
+
 homePageCodeStart = """
 @app.route('/', methods=['GET'])
 @app.route('/%s', methods=['GET'])
@@ -26,10 +28,54 @@ dataPageCode = """
     cur = conn.cursor()
     cur.execute('SELECT rowid, * FROM %s')
     data = cur.fetchall()
-    return render_template('%s.html', rows=data, encoding='utf-8')"""
+    return render_template('%s.html', rows=data, encoding='utf-8')
+    """
 
 genericPageCode = """
-    return render_template('%s.html', encoding='utf-8')"""
+    return render_template('%s.html', encoding='utf-8')
+    """
+
+fetchPageCode = """
+    with open('%s', 'r') as f:
+        data = json.load(f)
+        return render_template('%s.html', json=data, encoding='utf-8')
+    """
+
+postPageCodeStart = """
+@app.route('/%s', methods=['POST'])
+def %s():
+    if isAuthorised() == False:
+        abort(401)"""
+
+submitNewCode = """
+    conn = getConn()
+    cur = conn.cursor()
+    data = dict(request.form)
+    rowid = data['rowid']
+    data.pop('rowid', None)
+    if rowid == '':
+        placeholders = ', '.join('?' * len(list(data.values())))
+        sql = 'INSERT INTO %s VALUES ({})'.format(placeholders)
+        cur.execute(sql, list(data.values()))
+    else:
+        sets = []
+        for key in data:
+            sets.append(key + ' = ?')
+        sql = 'UPDATE %s SET {} WHERE rowid=?'.format(', '.join(sets))
+        cur.execute(sql, list(data.values()).append(rowid))
+    conn.commit()
+    return redirect('/')
+"""
+
+getPageCodeStart = """
+@app.route('/%s', methods=['GET'])
+def %s(%s):
+    if isAuthorised() == False:
+        abort(401)"""
+
+editCode = """
+    return render_template('%s.html', rowid=rowid, encoding='utf-8')
+"""
 
 codeFooter = """
 if __name__ == '__main__':
@@ -44,18 +90,18 @@ if __name__ == '__main__':
     app.run(HOST, PORT, debug=debug)
 """
 
-newCode = """
-"""
+#classes and the associated code
 
 class field:
     """A field that is held by a dataType"""
-    def __init__(self, name:str, fieldType:str = 'TEXT', unit:str = None, filtrable:bool = False) -> None:
+    def __init__(self, name:str, fieldType:str = 'TEXT', unit:str = '', filtrable:bool = False, required:bool = False) -> None:
         if fieldType not in sqliteTypes:
             raise ValueError('Provided fieldType %s doesn\'t exist in sqlite.' % fieldType)
         self.name = name
         self.fieldType = fieldType
         self.unit = unit
         self.filtrable = filtrable
+        self.required = required
 
 class dataType:
     """A data type that will be stored in the CSM. Each dataType has it's own table in the db and holds a set amount of fields"""
@@ -66,6 +112,7 @@ class dataType:
         else:
             self.fields = []
         self.children = []
+        self.isChild = False
 
     def addField(self, field:field) -> None:
         """Adds the given field to this datatype"""
@@ -74,17 +121,35 @@ class dataType:
     def addChild(self, child:'dataType') -> None:
         """Sets the provided datatype as a child to this datatype"""
         self.children.append(child)
+        child.isChild = True
+
+    def render(self, pages:list['page'], pythonFile:io.FileIO = None) -> None:
+        """Creates the neccesary endpoints and html templates for this dataType"""
+        template = environment.get_template('newTemplate.html')
+        content = template.render(pages = pages, data = self)
+        with open('./templates/%s.html' % self.name, 'w') as f:
+            f.write(content)
+        if pythonFile != None:
+            pythonFile.write(normalPageCodeStart % ('new/%s' % self.name, self.name))
+            pythonFile.write(genericPageCode % self.name)
+
+            pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
+            pythonFile.write(submitNewCode % (self.name, self.name))
+
+            pythonFile.write(getPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
+            pythonFile.write(editCode % self.name)
 
 class page:
     """A page in the CSM"""
-    def __init__(self, name:str):
+    def __init__(self, name:str, htmlContent:str = 'Hello World'):
         self.name = name
         self.home = False
+        self.htmlContent = htmlContent
 
-    def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
+    def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False, ) -> None:
         """Creates this page's template and writes the appropriate code to the pythonFile"""
         template = environment.get_template('genericTemplate.html')
-        content = template.render(page=self, pages=pages, htmlContent='Hello World').replace('{#', '').replace('#}', '')
+        content = template.render(page=self, pages=pages, htmlContent=self.htmlContent)
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
@@ -112,6 +177,26 @@ class dataPage(page):
             else:
                 pythonFile.write(normalPageCodeStart % (self.name, self.name))
             pythonFile.write(dataPageCode % (self.dataType.name, self.name))
+        self.dataType.render(pages, pythonFile)
+
+class fetchPage(page):
+    """Page that fetches contents of a json file and displays them once loaded"""
+    def setSource(self, filename:str):
+        """Sets the provided filename as the source json file"""
+        self.filename = filename
+
+    def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
+        """Creates this page's template and writes the appropriate code to the pythonFile"""
+        template = environment.get_template('fetchTemplate.html')
+        content = template.render(page=self, pages=pages)
+        with open('./templates/%s.html' % self.name, 'w') as f:
+            f.write(content)
+        if pythonFile != None:
+            if home:
+                pythonFile.write(homePageCodeStart % self.name)
+            else:
+                pythonFile.write(normalPageCodeStart % (self.name) * 2)
+            pythonFile.write(fetchPageCode % (self.filename, self.name))
 
 class db:
     """Database of a CSM app"""
@@ -179,7 +264,7 @@ class app:
 
 if __name__ == '__main__':
     thisApp = app('testCSM')
-    testPage = page('Home')
+    testPage = page('Home', 'Welcome')
     testDataPage = dataPage('Data')
     a = field('text1', filtrable=True)
     b = field('text2')
