@@ -30,7 +30,7 @@
                         <div class="mb-3 ">
                             <label for="{{field.name}}" class="form-label">{{field.name}}</label>
                             <div class="input-group">
-                                <input type="text" class="form-control" name="{{field.name}}" id="{{field.name}}" value="{{ '{{' + field.name + '}}' }}" aria-describedby="addon{{field.unit}}" {%if field.required%}required{%endif%}>
+                                <input type="{{field.htmlType}}" class="form-control" name="{{field.name}}" id="{{field.name}}" {{ ' {% if data is defined %} ' }} value="{{ '{{data[' + loop.index0|string + ']}} {%endif%}' }}" aria-describedby="addon{{field.unit}}" {%if field.required%}required{%endif%}>
                                 {%if field.unit != ''%}
                                 <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
                                 {%endif%}
@@ -44,7 +44,7 @@
             </div>
         </main>
         <footer>
-
+            {{htmlContent}}
         </footer>
     </body>
 </html>

@@ -62,24 +62,24 @@ def home():
         return render_template('auth.html', encoding='utf-8')
     return render_template('Home.html', encoding='utf-8')
     
-@app.route('/Data', methods=['GET'])
-def Data():
+@app.route('/Clients', methods=['GET'])
+def Clients():
     if isAuthorised() == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT rowid, * FROM testType')
+    cur.execute('SELECT rowid, * FROM Client')
     data = cur.fetchall()
-    return render_template('Data.html', rows=data, encoding='utf-8')
+    return render_template('Clients.html', rows=data, encoding='utf-8')
     
-@app.route('/new/testType', methods=['GET'])
-def testType():
+@app.route('/new/Client', methods=['GET'])
+def Client():
     if isAuthorised() == False:
         abort(401)
-    return render_template('testType.html', encoding='utf-8')
+    return render_template('Client.html', encoding='utf-8')
     
-@app.route('/new/testType/submit', methods=['POST'])
-def testTypeSubmit():
+@app.route('/new/Client/submit', methods=['POST'])
+def ClientSubmit():
     if isAuthorised() == False:
         abort(401)
     conn = getConn()
@@ -89,23 +89,78 @@ def testTypeSubmit():
     data.pop('rowid', None)
     if rowid == '':
         placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO testType VALUES ({})'.format(placeholders)
+        sql = 'INSERT INTO Client VALUES ({})'.format(placeholders)
         cur.execute(sql, list(data.values()))
     else:
         sets = []
         for key in data:
             sets.append(key + ' = ?')
-        sql = 'UPDATE testType SET {} WHERE rowid=?'.format(', '.join(sets))
-        print(sql)
-        cur.execute(sql, list(data.values()).append(rowid))
+        sql = 'UPDATE Client SET {} WHERE rowid=?'.format(', '.join(sets))
+        values = list(data.values())
+        values.append(rowid)
+        cur.execute(sql, values)
     conn.commit()
     return redirect('/')
 
-@app.route('/edit/testType/<rowid>', methods=['GET'])
-def testTypeEdit(rowid):
+@app.route('/edit/Client/<rowid>', methods=['GET'])
+def ClientEdit(rowid):
     if isAuthorised() == False:
         abort(401)
-    return render_template('testType.html', rowid=rowid, encoding='utf-8')
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Client WHERE rowid=?', (rowid, ))
+    data = cur.fetchall()[0]
+    return render_template('Client.html', data=data, rowid=rowid, encoding='utf-8')
+
+@app.route('/Products', methods=['GET'])
+def Products():
+    if isAuthorised() == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT rowid, * FROM Product')
+    data = cur.fetchall()
+    return render_template('Products.html', rows=data, encoding='utf-8')
+    
+@app.route('/new/Product', methods=['GET'])
+def Product():
+    if isAuthorised() == False:
+        abort(401)
+    return render_template('Product.html', encoding='utf-8')
+    
+@app.route('/new/Product/submit', methods=['POST'])
+def ProductSubmit():
+    if isAuthorised() == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    data = dict(request.form)
+    rowid = data['rowid']
+    data.pop('rowid', None)
+    if rowid == '':
+        placeholders = ', '.join('?' * len(list(data.values())))
+        sql = 'INSERT INTO Product VALUES ({})'.format(placeholders)
+        cur.execute(sql, list(data.values()))
+    else:
+        sets = []
+        for key in data:
+            sets.append(key + ' = ?')
+        sql = 'UPDATE Product SET {} WHERE rowid=?'.format(', '.join(sets))
+        values = list(data.values())
+        values.append(rowid)
+        cur.execute(sql, values)
+    conn.commit()
+    return redirect('/')
+
+@app.route('/edit/Product/<rowid>', methods=['GET'])
+def ProductEdit(rowid):
+    if isAuthorised() == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM Product WHERE rowid=?', (rowid, ))
+    data = cur.fetchall()[0]
+    return render_template('Product.html', data=data, rowid=rowid, encoding='utf-8')
 
 if __name__ == '__main__':
     import os

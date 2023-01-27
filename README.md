@@ -6,7 +6,7 @@ This package provides a simple yet effective interface that will create a fully 
 
 ## Usage
 
-First you need to generate the webapp using python.
+Let's generate a simple webapp. Ensure that the static, templates, readyTemplates, addUser.py and appSkeleton.py are next to the openCMS.py
 
 ```Python
 #first we import the needed classes
@@ -14,7 +14,7 @@ from openCMS import app, page, dataPage, field, dataType
 #then we create the app object
 thisApp = app('testCSM')
 #next a generic page object
-testPage = page('Home', 'Welcome to my CMS')
+testPage = page('Home', thisApp.name)
 #we then add this page to the app
 thisApp.setHome(testPage)
 thisApp.addPage(testPage)
@@ -31,4 +31,7 @@ thisApp.addPage(testDataPage)
 thisApp.render()
 ```
 
-Then you may customise the end result of the script to your desires, adding new features or changing what you want!
+Quite fast and easy isn't it?  
+Then you may customise the end result of the script to your desires, adding new features or changing whatever you want!  
+A more detailed usage example you can find [here](./testRender.py)
+  

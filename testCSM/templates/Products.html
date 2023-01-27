@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Data</title>
+        <title>Products</title>
         <meta charset="utf-8" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
@@ -22,7 +22,11 @@
                 </li>
                 
                 <li class="nav-item">
-                    <a class="nav-link h1 active" href="/Data">Data</a>
+                    <a class="nav-link h1 " href="/Clients">Clients</a>
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link h1 active" href="/Products">Products</a>
                 </li>
                 
             </ul>
@@ -35,12 +39,12 @@
                         <thead class="tableFixHead bg-body">
                             <tr>
                                 
-                                <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, 'text1');">text1</th>
+                                <th scope="col">Product name</th>
                                 
-                                <th scope="col">text2</th>
+                                <th scope="col">Price</th>
                                 
                                 <th scope="col" style="width:10%;">
-                                    <a href="/new/testType" class="btn btn-success" style="width:100%;">New testType</a>
+                                    
                                 </th>
                             </tr>
                         </thead>
@@ -48,11 +52,11 @@
                             {%for item in rows%}
                                 <tr name="row">
                                     
-                                        <td name="text1">{{item[1]}}</td>
+                                        <td name="Product name">{{item[1]}}</td>
                                     
-                                        <td name="text2">{{item[2]}}</td>
+                                        <td name="Price">{{item[2]}}$</td>
                                     
-                                    <td><a href="/edit/testType/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-success" style="width:100%;">Copy</button></form>
+                                    <td><a href="/edit/Product/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                                         
                                     </td>
                                 </tr>
@@ -63,7 +67,7 @@
               </div>
         </main>
         <footer>
-
+            
         </footer>
     </body>
     <script>
