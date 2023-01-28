@@ -105,6 +105,8 @@ class field:
     def __init__(self, name:str, fieldType:str = 'TEXT', htmlType:str = 'text', unit:str = '', filtrable:bool = False, required:bool = False) -> None:
         if fieldType not in sqliteTypes or htmlType not in inputType:
             raise ValueError('Provided fieldType %s doesn\'t exist in sqlite.' % fieldType)
+        if 'table' in name:
+            raise ValueError('Invalid field name')
         self.name = name
         self.fieldType = fieldType
         self.unit = unit
@@ -123,12 +125,21 @@ class dataType:
         self.children = []
         self.isChild = False
 
-    def addField(self, field:field) -> None:
+    def addField(self, newField:field) -> None:
         """Adds the given field to this datatype"""
-        self.fields.append(field)
-    
+        if not isinstance(newField, field):
+            raise TypeError('The provided newField is not a field, but a %s' % newField.__class__.__name__)
+        self.fields.append(newField)
+
+    def addDataField(self, newDataField:'dataType') -> None:
+        if not isinstance(newDataField, dataType):
+            raise TypeError('The provided newDataField is not a dataType, but a %s' % newDataField.__class__.__name__)
+        self.fields.append(newDataField)
+
     def addChild(self, child:'dataType') -> 'dataType':
         """Sets the provided datatype as a child to this datatype"""
+        if not isinstance(child, dataType):
+            raise TypeError('The provided child is not a dataType, but a %s' % child.__class__.__name__)
         child.isChild = True
         self.children.append(child)
         return child
@@ -151,11 +162,11 @@ class dataType:
 
 class page:
     """A static page in the CSM with preset content"""
-    def __init__(self, name:str, htmlContent:str = ''):
+    def __init__(self, name:str, footerContent:str = '', htmlContent:str = ''):
         self.name = name
         self.home = False
         self.htmlContent = htmlContent
-        self.footerContent = ''
+        self.footerContent = footerContent
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False, ) -> None:
         """Creates this page's template and writes the appropriate code to the pythonFile"""
@@ -172,14 +183,16 @@ class page:
 
 class dataPage(page):
     """Page that displays a table with all the data from the correspoding db table."""
-    def setData(self, dataType:dataType) -> None:
+    def setData(self, newDataType:dataType) -> None:
         """Sets which datatype this page should display"""
-        self.dataType = dataType
+        if not isinstance(newDataType, dataType):
+            raise TypeError('The provided newDataType is not a dataType, but a %s' % newDataType.__class__.__name__)
+        self.dataType = newDataType
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
         """Creates this page's template"""
         template = environment.get_template('dataTemplate.html')
-        content = template.render(page=self, pages=pages, data=self.dataType, htmlContent=self.htmlContent)
+        content = template.render(page=self, pages=pages, data=self.dataType, footerContent=self.footerContent)
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
@@ -194,12 +207,14 @@ class fetchPage(page):
     """Page that fetches contents of a json file and displays them once loaded"""
     def setSource(self, filename:str):
         """Sets the provided filename as the source json file"""
+        if not isinstance(filename, str):
+            raise TypeError('The provided filename is not string')
         self.filename = filename
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
         """Creates this page's template and writes the appropriate code to the pythonFile"""
         template = environment.get_template('fetchTemplate.html')
-        content = template.render(page=self, pages=pages, htmlContent=self.htmlContent)
+        content = template.render(page=self, pages=pages, footerContent=self.footerContent)
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
@@ -221,17 +236,19 @@ class db:
         conn.commit()
         self.filename = filename
 
-    def addData(self, dataType:dataType) -> None:
+    def addData(self, newDataType:dataType) -> None:
         """Creates the needed table for the dataType in the db"""
+        if not isinstance(newDataType, dataType):
+            raise TypeError('Provided newDataType is not dataType but %s' % newDataType.__class__.__name__)
         cur = self.conn.cursor()
         sql = 'CREATE TABLE "%s" ( %s )'
         sqlInner = []
-        for field in dataType.fields:
-            if field is dataType:
+        for field in newDataType.fields:
+            if isinstance(field, dataType):
                 sqlInner.append('"%s" TEXT' % field.name)
             else:
                 sqlInner.append('"%s" %s' % (field.name, field.fieldType))
-        sql = sql % (dataType.name, ','.join(sqlInner))
+        sql = sql % (newDataType.name, ','.join(sqlInner))
         try:
             cur.execute(sql)
         except sqlite3.OperationalError:
@@ -248,17 +265,21 @@ class app:
         self.pages = []
         self.home = None
 
-    def addPage(self, page:page) -> None:
+    def addPage(self, newPage:page) -> None:
         """Adds the page to the app"""
-        if page in self.pages:
-            raise Exception('Page %s already is assigned to this app' % page.name)
-        self.pages.append(page)
+        if not isinstance(newPage, page):
+            raise TypeError('Provided newPage is not a page but %s' % newPage.__class__.__name__)
+        if newPage in self.pages:
+            raise Exception('Page %s already is assigned to this app' % newPage.name)
+        self.pages.append(newPage)
 
-    def setHome(self, page:page) -> None:
+    def setHome(self, newPage:page) -> None:
         """Sets the given page as home"""
-        if page not in self.pages:
-            raise Exception('Page %s is not assigned to %s app' % (page.name, self.name))
-        self.home = page
+        if not isinstance(newPage, page):
+            raise TypeError('Provided newPage is not a page but %s' % newPage.__class__.__name__)
+        if newPage not in self.pages:
+            raise Exception('Page %s is not assigned to %s app' % (newPage.name, self.name))
+        self.home = newPage
 
     def render(self) -> None:
         """Creates the app"""
