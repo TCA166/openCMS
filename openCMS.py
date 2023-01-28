@@ -6,6 +6,18 @@ import shutil
 
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(os.path.realpath(__file__)) + '\\templates'))
 
+def __renderTable(dataType:'dataType'):
+    template = environment.get_template('tableTemplate.html')
+    content = template.render(data = dataType)
+    return content
+
+def __isField(object):
+    return isinstance(object, field)
+
+#so that's something cool: we import python functions into jinja
+environment.globals['renderTable'] = __renderTable
+environment.globals['isField'] = __isField
+
 sqliteTypes = ['INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC']
 
 inputType = ['checkbox', 'color', 'date', 'email', 'file', 'image', 'number', 'password', 'range', 'text', 'tel']
@@ -25,16 +37,33 @@ def %s():
     if isAuthorised() == False:
         abort(401)"""
 
+argsPageCodeStart = """
+@app.route('/%s', methods=['GET'])
+def %s(%s):
+    if isAuthorised() == False:
+        abort(401)"""
+
+getPageCodeStart = """
+@app.route('/%s', methods=['GET'])
+def %s(%s):
+    if isAuthorised() == False:
+        abort(401)"""
+
 dataPageCode = """
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT rowid, * FROM %s')
-    data = cur.fetchall()
-    return render_template('%s.html', rows=data, encoding='utf-8')
+    tableName = '%s'
+    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    %sRows = cur.fetchall()
+    return render_template('%s.html', %s, encoding='utf-8')
     """
 
 genericPageCode = """
     return render_template('%s.html', encoding='utf-8')
+    """
+
+argsPageCode = """
+    return render_template('%s.html', %s, encoding='utf-8')
     """
 
 fetchPageCode = """
@@ -57,13 +86,13 @@ submitNewCode = """
     data.pop('rowid', None)
     if rowid == '':
         placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO %s VALUES ({})'.format(placeholders)
+        sql = 'INSERT INTO "%s" VALUES ({})'.format(placeholders)
         cur.execute(sql, list(data.values()))
     else:
         sets = []
         for key in data:
             sets.append(key + ' = ?')
-        sql = 'UPDATE %s SET {} WHERE rowid=?'.format(', '.join(sets))
+        sql = 'UPDATE "%s" SET {} WHERE rowid=?'.format(', '.join(sets))
         values = list(data.values())
         values.append(rowid)
         cur.execute(sql, values)
@@ -71,16 +100,10 @@ submitNewCode = """
     return redirect('/')
 """
 
-getPageCodeStart = """
-@app.route('/%s', methods=['GET'])
-def %s(%s):
-    if isAuthorised() == False:
-        abort(401)"""
-
 editCode = """
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM %s WHERE rowid=?', (rowid, ))
+    cur.execute('SELECT * FROM "%s" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
     return render_template('%s.html', data=data, rowid=rowid, encoding='utf-8')
 """
@@ -105,7 +128,7 @@ class field:
     def __init__(self, name:str, fieldType:str = 'TEXT', htmlType:str = 'text', unit:str = '', filtrable:bool = False, required:bool = False) -> None:
         if fieldType not in sqliteTypes or htmlType not in inputType:
             raise ValueError('Provided fieldType %s doesn\'t exist in sqlite.' % fieldType)
-        if 'table' in name:
+        if 'TABLE' in name:
             raise ValueError('Invalid field name')
         self.name = name
         self.fieldType = fieldType
@@ -124,6 +147,7 @@ class dataType:
             self.fields = []
         self.children = []
         self.isChild = False
+        self.parentName = ''
 
     def addField(self, newField:field) -> None:
         """Adds the given field to this datatype"""
@@ -131,17 +155,26 @@ class dataType:
             raise TypeError('The provided newField is not a field, but a %s' % newField.__class__.__name__)
         self.fields.append(newField)
 
-    def addDataField(self, newDataField:'dataType') -> None:
-        if not isinstance(newDataField, dataType):
-            raise TypeError('The provided newDataField is not a dataType, but a %s' % newDataField.__class__.__name__)
-        self.fields.append(newDataField)
+    #def addDataField(self, newDataField:'dataType') -> None:
+    #    if not isinstance(newDataField, dataType):
+    #        raise TypeError('The provided newDataField is not a dataType, but a %s' % newDataField.__class__.__name__)
+    #    self.fields.append(newDataField)
 
     def addChild(self, child:'dataType') -> 'dataType':
-        """Sets the provided datatype as a child to this datatype"""
+        """Sets the provided datatype as a child to this datatype. Be sure to get the returned altered object"""
         if not isinstance(child, dataType):
             raise TypeError('The provided child is not a dataType, but a %s' % child.__class__.__name__)
+        if child in self.children:
+            raise ValueError('The provided child is already a child')
         child.isChild = True
         self.children.append(child)
+        for childField in child.fields:
+            if childField.name == self.name:
+                raise ValueError('Overlapping field names %s while attemting to addChild(). Field names of children cannot be named the same as the parent dataType' % self.name)
+        first = child.fields[0]
+        child.fields[0] = field(self.name, filtrable=True, required=True)
+        child.fields.append(first)
+        child.parentName = self.name
         return child
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None) -> None:
@@ -151,18 +184,23 @@ class dataType:
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
-            pythonFile.write(normalPageCodeStart % ('new/%s' % self.name, self.name))
-            pythonFile.write(genericPageCode % self.name)
-
+            #show form
+            if self.isChild:
+                pythonFile.write(argsPageCodeStart % ('new/%s/<%s>' % (self.name, self.parentName), self.name, self.parentName))
+                pythonFile.write(argsPageCode % (self.name, '%s=%s' % (self.parentName, self.parentName)))
+            else:
+                pythonFile.write(normalPageCodeStart % ('new/%s' % self.name, self.name))
+                pythonFile.write(genericPageCode % self.name)
+            #submit form
             pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
             pythonFile.write(submitNewCode % (self.name, self.name))
-
+            #edit form
             pythonFile.write(getPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
             pythonFile.write(editCode % (self.name, self.name))
 
 class page:
     """A static page in the CSM with preset content"""
-    def __init__(self, name:str, footerContent:str = '', htmlContent:str = ''):
+    def __init__(self, name:str, htmlContent:str = '', footerContent:str = ''):
         self.name = name
         self.home = False
         self.htmlContent = htmlContent
@@ -180,6 +218,10 @@ class page:
             else:
                 pythonFile.write(normalPageCodeStart % (self.name) * 2)
             pythonFile.write(genericPageCode % self.name)
+
+    def toPage(self) -> 'page':
+        """Returns a new page object generated with this one's attributes"""
+        return page(self.name, self.htmlContent, self.footerContent)
 
 class dataPage(page):
     """Page that displays a table with all the data from the correspoding db table."""
@@ -200,7 +242,9 @@ class dataPage(page):
                 pythonFile.write(homePageCodeStart % self.name)
             else:
                 pythonFile.write(normalPageCodeStart % (self.name, self.name))
-            pythonFile.write(dataPageCode % (self.dataType.name, self.name))
+            t = ['%sRows=%sRows' % (f.name, f.name) for f in self.dataType.fields if isinstance(f, dataType)]
+            t.append('%sRows=%sRows' % (self.dataType.name, self.dataType.name))
+            pythonFile.write(dataPageCode % (self.dataType.name, self.dataType.name, self.name, ','.join(t)))
         self.dataType.render(pages, pythonFile)
 
 class fetchPage(page):
@@ -245,7 +289,7 @@ class db:
         sqlInner = []
         for field in newDataType.fields:
             if isinstance(field, dataType):
-                sqlInner.append('"%s" TEXT' % field.name)
+                sqlInner.append('"%sTABLE" TEXT' % field.name)
             else:
                 sqlInner.append('"%s" %s' % (field.name, field.fieldType))
         sql = sql % (newDataType.name, ','.join(sqlInner))

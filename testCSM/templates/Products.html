@@ -36,33 +36,43 @@
             <div class="card">
                 <div class="card-body">
                     <table class="table table-hover h-100">
-                        <thead class="tableFixHead bg-body">
-                            <tr>
-                                
-                                <th scope="col">Product name</th>
-                                
-                                <th scope="col">Price</th>
-                                
-                                <th scope="col" style="width:10%;">
-                                    
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {%for item in rows%}
-                                <tr name="row">
-                                    
-                                        <td name="Product name">{{item[1]}}</td>
-                                    
-                                        <td name="Price">{{item[2]}}$</td>
-                                    
-                                    <td><a href="/edit/Product/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
-                                        
-                                    </td>
-                                </tr>
-                            {%endfor%}
-                        </tbody>
-                    </table>
+    <thead class="tableFixHead bg-body">
+        <tr>
+            
+            <th scope="col"><input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, 'Client');">Client</th>
+            
+            <th scope="col">Price</th>
+            
+            <th scope="col">Product name</th>
+            
+            <th scope="col" style="width:10%;">
+                
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for item in ProductRows%}
+            <tr name="row">
+                
+                    
+                    <td name="Client">{{item[1]}}</td>
+                    
+                
+                    
+                    <td name="Price">{{item[2]}}$</td>
+                    
+                
+                    
+                    <td name="Product name">{{item[3]}}</td>
+                    
+                
+                <td><a href="/edit/Product/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    
+                </td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
                 </div>
               </div>
         </main>

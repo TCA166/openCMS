@@ -36,41 +36,47 @@
             <div class="card">
                 <div class="card-body">
                     <table class="table table-hover h-100">
-                        <thead class="tableFixHead bg-body">
-                            <tr>
-                                
-                                <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, 'Name');">Name</th>
-                                
-                                <th scope="col"><input type="text" class="form-control" placeholder="Filtr" onchange="filtr(this.value, 'Surname');">Surname</th>
-                                
-                                <th scope="col">Age</th>
-                                
-                                <th scope="col" style="width:10%;">
-                                    
-                                    <a href="/new/Client" class="btn btn-success" style="width:100%;">New Client</a>
-                                    
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {%for item in rows%}
-                                <tr name="row">
-                                    
-                                        <td name="Name">{{item[1]}}</td>
-                                    
-                                        <td name="Surname">{{item[2]}}</td>
-                                    
-                                        <td name="Age">{{item[3]}}yrs</td>
-                                    
-                                    <td><a href="/edit/Client/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
-                                        
-                                            <a href="/new/Product" class="btn btn-success" style="width:100%;">New Product</a>
-                                        
-                                    </td>
-                                </tr>
-                            {%endfor%}
-                        </tbody>
-                    </table>
+    <thead class="tableFixHead bg-body">
+        <tr>
+            
+            <th scope="col"><input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, 'Name');">Name</th>
+            
+            <th scope="col"><input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, 'Surname');">Surname</th>
+            
+            <th scope="col">Age</th>
+            
+            <th scope="col" style="width:10%;">
+                
+                <a href="/new/Client" class="btn btn-success" style="width:100%;">New Client</a>
+                
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for item in ClientRows%}
+            <tr name="row">
+                
+                    
+                    <td name="Name">{{item[1]}}</td>
+                    
+                
+                    
+                    <td name="Surname">{{item[2]}}</td>
+                    
+                
+                    
+                    <td name="Age">{{item[3]}}yrs</td>
+                    
+                
+                <td><a href="/edit/Client/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    
+                        <a href="/new/Product/{{item[1]}}" class="btn btn-success" style="width:100%;">New Product</a>
+                    
+                </td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
                 </div>
               </div>
         </main>

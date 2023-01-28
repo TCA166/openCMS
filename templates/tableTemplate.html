@@ -1,0 +1,32 @@
+<table class="table table-hover h-100">
+    <thead class="tableFixHead bg-body">
+        <tr>
+            {%for field in data.fields%}
+            <th scope="col">{%if field.filtrable%}<input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, '{{field.name}}');">{%endif%}{{field.name}}</th>
+            {%endfor%}
+            <th scope="col" style="width:10%;">
+                {%if not data.isChild%}
+                <a href="/new/{{data.name}}" class="btn btn-success" style="width:100%;">New {{data.name}}</a>
+                {%endif%}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {{'{%for item in ' + data.name + 'Rows%}'}}
+            <tr name="row">
+                {%for thisField in data.fields%}
+                    {%if isField(thisField)%}
+                    <td name="{{thisField.name}}">{{'{{item[' + loop.index|string + ']}}' + thisField.unit}}</td>
+                    {%else%}
+                        {{renderTable(thisField)}}
+                    {%endif%}
+                {%endfor%}
+                <td><a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    {%for child in data.children%}
+                        <a href="/new/{{child.name}}/{{'{{item[1]}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
+                    {%endfor%}
+                </td>
+            </tr>
+        {{'{%endfor%}'}}
+    </tbody>
+</table>

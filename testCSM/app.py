@@ -68,9 +68,10 @@ def Clients():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT rowid, * FROM Client')
-    data = cur.fetchall()
-    return render_template('Clients.html', rows=data, encoding='utf-8')
+    tableName = 'Client'
+    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    ClientRows = cur.fetchall()
+    return render_template('Clients.html', ClientRows=ClientRows, encoding='utf-8')
     
 @app.route('/new/Client', methods=['GET'])
 def Client():
@@ -89,13 +90,13 @@ def ClientSubmit():
     data.pop('rowid', None)
     if rowid == '':
         placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO Client VALUES ({})'.format(placeholders)
+        sql = 'INSERT INTO "Client" VALUES ({})'.format(placeholders)
         cur.execute(sql, list(data.values()))
     else:
         sets = []
         for key in data:
             sets.append(key + ' = ?')
-        sql = 'UPDATE Client SET {} WHERE rowid=?'.format(', '.join(sets))
+        sql = 'UPDATE "Client" SET {} WHERE rowid=?'.format(', '.join(sets))
         values = list(data.values())
         values.append(rowid)
         cur.execute(sql, values)
@@ -108,7 +109,7 @@ def ClientEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM Client WHERE rowid=?', (rowid, ))
+    cur.execute('SELECT * FROM "Client" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
     return render_template('Client.html', data=data, rowid=rowid, encoding='utf-8')
 
@@ -118,15 +119,16 @@ def Products():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT rowid, * FROM Product')
-    data = cur.fetchall()
-    return render_template('Products.html', rows=data, encoding='utf-8')
+    tableName = 'Product'
+    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    ProductRows = cur.fetchall()
+    return render_template('Products.html', ProductRows=ProductRows, encoding='utf-8')
     
-@app.route('/new/Product', methods=['GET'])
-def Product():
+@app.route('/new/Product/<Client>', methods=['GET'])
+def Product(Client):
     if isAuthorised() == False:
         abort(401)
-    return render_template('Product.html', encoding='utf-8')
+    return render_template('Product.html', Client=Client, encoding='utf-8')
     
 @app.route('/new/Product/submit', methods=['POST'])
 def ProductSubmit():
@@ -139,13 +141,13 @@ def ProductSubmit():
     data.pop('rowid', None)
     if rowid == '':
         placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO Product VALUES ({})'.format(placeholders)
+        sql = 'INSERT INTO "Product" VALUES ({})'.format(placeholders)
         cur.execute(sql, list(data.values()))
     else:
         sets = []
         for key in data:
             sets.append(key + ' = ?')
-        sql = 'UPDATE Product SET {} WHERE rowid=?'.format(', '.join(sets))
+        sql = 'UPDATE "Product" SET {} WHERE rowid=?'.format(', '.join(sets))
         values = list(data.values())
         values.append(rowid)
         cur.execute(sql, values)
@@ -158,7 +160,7 @@ def ProductEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM Product WHERE rowid=?', (rowid, ))
+    cur.execute('SELECT * FROM "Product" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
     return render_template('Product.html', data=data, rowid=rowid, encoding='utf-8')
 

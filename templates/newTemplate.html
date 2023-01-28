@@ -26,17 +26,19 @@
                 <div class="card-body">
                     <form action="/new/{{data.name}}/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{ '{{rowid}}' }}">
-                        {%for field in data.fields%}
                         <div class="mb-3 ">
-                            <label for="{{field.name}}" class="form-label">{{field.name}}</label>
-                            <div class="input-group">
-                                <input type="{{field.htmlType}}" class="form-control" name="{{field.name}}" id="{{field.name}}" {{ ' {% if data is defined %} ' }} value="{{ '{{data[' + loop.index0|string + ']}} {%endif%}' }}" aria-describedby="addon{{field.unit}}" {%if field.required%}required{%endif%}>
-                                {%if field.unit != ''%}
-                                <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
-                                {%endif%}
+                            {%for field in data.fields%}
+                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+                                <label for="{{field.name}}" class="form-label">{{field.name}}</label>
+                                <div class="input-group">
+                                    <input type="{{field.htmlType}}" class="form-control" name="{{field.name}}" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{data[' + loop.index0|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data is defined %}  value="{{data[' + loop.index0|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
+                                    {%if field.unit != ''%}
+                                    <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
+                                    {%endif%}
+                                </div>
                             </div>
+                            {%endfor%}
                         </div>
-                        {%endfor%}
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
                     </form>
@@ -44,7 +46,7 @@
             </div>
         </main>
         <footer>
-            {{htmlContent}}
+            {{footerContent}}
         </footer>
     </body>
 </html>

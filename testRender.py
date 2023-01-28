@@ -2,7 +2,7 @@ from openCMS import app, page, dataPage, dataType, field
 
 newApp = app('testCSM') #create the new app object
 #create a new page - a generic one with text
-homePage = page('Home', 'Welcome to this very demonstrative <b>testCSM</b>')
+homePage = page('Home', 'Welcome to this very demonstrative <b>testCMS</b>')
 newApp.addPage(homePage)
 newApp.setHome(homePage) # set this page as home
 #create a second page, this one holding a datatype with three fields

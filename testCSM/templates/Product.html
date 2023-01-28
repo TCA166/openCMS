@@ -34,25 +34,35 @@
                 <div class="card-body">
                     <form action="/new/Product/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
-                        
                         <div class="mb-3 ">
-                            <label for="Product name" class="form-label">Product name</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" name="Product name" id="Product name"  {% if data is defined %}  value="{{data[0]}} {%endif%}" aria-describedby="addon" >
-                                
+                            
+                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+                                <label for="Client" class="form-label">Client</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="Client" id="Client" aria-describedby="addon"  readonly value="{%if Client is defined %}{{Client}}{%else%}{{data[0]}}{%endif%}" required>
+                                    
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="mb-3 ">
-                            <label for="Price" class="form-label">Price</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="Price" id="Price"  {% if data is defined %}  value="{{data[1]}} {%endif%}" aria-describedby="addon$" >
-                                
-                                <span class="input-group-text" id="addon$">$</span>
-                                
+                            
+                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+                                <label for="Price" class="form-label">Price</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" name="Price" id="Price" aria-describedby="addon$"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
+                                    
+                                    <span class="input-group-text" id="addon$">$</span>
+                                    
+                                </div>
                             </div>
+                            
+                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+                                <label for="Product name" class="form-label">Product name</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="Product name" id="Product name" aria-describedby="addon"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
+                                    
+                                </div>
+                            </div>
+                            
                         </div>
-                        
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
                     </form>
