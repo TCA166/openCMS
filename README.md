@@ -12,7 +12,7 @@ Let's generate a simple webapp. Ensure that the static, templates, readyTemplate
 #first we import the needed classes
 from openCMS import app, page, dataPage, field, dataType
 #then we create the app object
-thisApp = app('testCSM')
+thisApp = app('testCMS')
 #next a generic page object
 testPage = page('Home', thisApp.name)
 #we then add this page to the app
