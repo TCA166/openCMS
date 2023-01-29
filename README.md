@@ -2,7 +2,7 @@
 
 ## An open python CMS webapp generator
 
-This package provides a simple yet effective interface that will create a fully functional python Flask webapp intended to be used as a CMS, but in theory may be customised to display anything.
+This package provides a simple yet effective interface that will create a fully functional python Flask webapp intended to be used as a CMS(Customer Management System), but in theory may be customised to display anything.
 
 ## Usage
 
