@@ -34,4 +34,9 @@ thisApp.render()
 Quite fast and easy isn't it?  
 Then you may customise the end result of the script to your desires, adding new features or changing whatever you want!  
 A more detailed usage example you can find [here](./testRender.py)
-  
+
+
+## License
+
+[![CCimg](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/)  
+This work is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).  
