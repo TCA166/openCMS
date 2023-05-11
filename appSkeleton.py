@@ -5,6 +5,9 @@ import os
 import addUser
 import json
 
+#This app was generated using the openCSM framework for python
+#You can find it here https://github.com/TCA166/openCMS
+
 app = Flask(__name__)
 
 # Make the WSGI interface available at the top level so wfastcgi can get it.

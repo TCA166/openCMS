@@ -1,0 +1,6 @@
+flask
+Jinja2
+sqlite3
+shutil
+werkzeug
+hashlib

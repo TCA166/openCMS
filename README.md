@@ -35,6 +35,18 @@ Quite fast and easy isn't it?
 Then you may customize the end result of the script to your desires, adding new features or changing whatever you want!  
 A more detailed usage example you can find [here](./testRender.py)
 
+## How it works
+
+This framework is consists of several files. Most notably the openCMS.py file which contains the classes used for the rendering itself,
+appSkeleton.py which contains the backbone backend code that is the appended automatically during rendering by classes in openCMS.py, and the different template templates which are rendered using jinja to form the templates in the rendered app.
+Additionally some files are simply copied over to the result directory like the files in readyTemplates, static and the addUser.py utility.
+
+## Intended workflow
+
+Naturally you may use this framework for many things, however IMO it's best to use it to simply speed up the development process of a webapp.
+Simpler apps may be completed outright using this framework, but more complicated apps utilizing for example weak relationships or m:n relationships in their databases will need to be built up from the fundament this framework provides manually.
+But the time savings from simply automating the most repetitive parts of web development cannot be underestimated.
+
 ## License
 
 [![CCimg](https://i.creativecommons.org/l/by/4.0/88x31.png)](http://creativecommons.org/licenses/by/4.0/)  
