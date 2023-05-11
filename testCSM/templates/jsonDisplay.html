@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Home</title>
+        <title>jsonDisplay</title>
         <meta charset="utf-8" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
@@ -15,7 +15,7 @@
             <ul class="nav nav-tabs card-header-tabs col-md-10 text-center d-flex justify-content-center" style="margin-left:auto;margin-right:auto;">
                 
                 <li class="nav-item">
-                    <a class="nav-link h1 active" href="/Home">Home</a>
+                    <a class="nav-link h1 " href="/Home">Home</a>
                 </li>
                 
                 <li class="nav-item">
@@ -31,14 +31,37 @@
                 </li>
                 
                 <li class="nav-item">
-                    <a class="nav-link h1 " href="/jsonDisplay">jsonDisplay</a>
+                    <a class="nav-link h1 active" href="/jsonDisplay">jsonDisplay</a>
                 </li>
                 
             </ul>
             <div class="col-md-2"><a href="/logout" class="btn btn-danger btn-sm float-end">Log Out</a></div>
         </header>
-        <main>
-            Welcome to this very demonstrative <b>testCMS</b>
+        <main class="card-group">
+            {%for item in json%}
+            <div class="card">
+                {% if "hdr" in item %}
+                <div class="card-header">{{item["hdr"]}}</div>
+                {%endif%}
+                {% if "img" in item %}
+                <img src="{{item["img"]}}" class="card-img-top" style="max-height:200px" alt="card image">
+                {%endif%}
+                <div class="card-body">
+                    <h5 class="card-title">{{item["title"]}}</h5>
+                    <p class="card-text">{{item["content"]}}</p>
+                </div>
+                <ul class="list-group list-group-flush">
+                    {%for key, value in item.items()%}
+                        {%if key not in ("img", "title", "content", "href")%}
+                        <li class="list-group-item {{key}}" id="{{key}}">{{value}}</li>
+                        {%endif%}
+                    {%endfor%}
+                </ul>
+                {% if "href" in item %}
+                <a href="{{item["href"]}}" class="card-body card-link">Read More</a>
+                {%endif%}
+            </div>
+            {%endfor%}
         </main>
         <footer>
             

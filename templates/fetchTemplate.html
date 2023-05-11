@@ -21,19 +21,29 @@
             </ul>
             <div class="col-md-2"><a href="/logout" class="btn btn-danger btn-sm float-end">Log Out</a></div>
         </header>
-        <main>
+        <main class="card-group">
             {{'{%for item in json%}
             <div class="card">
+                {% if "hdr" in item %}
+                <div class="card-header">{{item["hdr"]}}</div>
+                {%endif%}
                 {% if "img" in item %}
-                <img src="{{item["img"]}}" class="card-img-top" alt="...">
+                <img src="{{item["img"]}}" class="card-img-top" style="max-height:200px" alt="card image">
                 {%endif%}
                 <div class="card-body">
                     <h5 class="card-title">{{item["title"]}}</h5>
                     <p class="card-text">{{item["content"]}}</p>
-                    {% if "href" in item %}
-                    <a href="{{item["href"]}}" class="btn btn-primary">Read More</a>
-                    {%endif%}
                 </div>
+                <ul class="list-group list-group-flush">
+                    {%for key, value in item.items()%}
+                        {%if key not in ("img", "title", "content", "href", "hdr")%}
+                        <li class="list-group-item {{key}}" id="{{key}}">{{value}}</li>
+                        {%endif%}
+                    {%endfor%}
+                </ul>
+                {% if "href" in item %}
+                <a href="{{item["href"]}}" class="card-body card-link">Read More</a>
+                {%endif%}
             </div>
             {%endfor%}'}}
         </main>

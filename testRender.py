@@ -1,4 +1,4 @@
-from openCMS import app, page, dataPage, dataType, field
+from openCMS import app, page, dataPage, dataType, field, fetchPage
 
 newApp = app('testCSM') #create the new app object
 #create a new page - a generic one with text
@@ -28,6 +28,10 @@ secretPage = dataPage('secretPage')
 secretPage.setAuthLevel(1)
 secretPage.setData(secretType)
 newApp.addPage(secretPage)
+#a fetch page for displaying data in a json file
+jsonPage = fetchPage("jsonDisplay")
+jsonPage.setSource("cards.json")
+newApp.addPage(jsonPage)
 #finally render and launch
 newApp.render()
 newApp.launch() #this optional but useful for fast debugging

@@ -5,6 +5,9 @@ import os
 import addUser
 import json
 
+#This app was generated using the openCSM framework for python
+#You can find it here https://github.com/TCA166/openCMS
+
 app = Flask(__name__)
 
 # Make the WSGI interface available at the top level so wfastcgi can get it.
@@ -184,19 +187,19 @@ def secretPage():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    tableName = 'Super_Secret'
+    tableName = 'superSecret'
     cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
-    Super_SecretRows = cur.fetchall()
-    return render_template('secretPage.html', Super_SecretRows=Super_SecretRows, encoding='utf-8')
+    superSecretRows = cur.fetchall()
+    return render_template('secretPage.html', superSecretRows=superSecretRows, encoding='utf-8')
     
-@app.route('/new/Super_Secret', methods=['GET'])
-def Super_Secret():
+@app.route('/new/superSecret', methods=['GET'])
+def superSecret():
     if isAuthorised(1) == False:
         abort(401)
-    return render_template('Super_Secret.html', encoding='utf-8')
+    return render_template('superSecret.html', encoding='utf-8')
     
-@app.route('/new/Super_Secret/submit', methods=['POST'])
-def Super_SecretSubmit():
+@app.route('/new/superSecret/submit', methods=['POST'])
+def superSecretSubmit():
     if isAuthorised(1) == False:
         abort(401)
     conn = getConn()
@@ -206,29 +209,37 @@ def Super_SecretSubmit():
     data.pop('rowid', None)
     if rowid == '':
         placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "Super_Secret" VALUES ({})'.format(placeholders)
+        sql = 'INSERT INTO "superSecret" VALUES ({})'.format(placeholders)
         cur.execute(sql, list(data.values()))
     else:
         sets = []
         for key in data:
             sets.append(key + ' = ?')
-        sql = 'UPDATE "Super_Secret" SET {} WHERE rowid=?'.format(', '.join(sets))
+        sql = 'UPDATE "superSecret" SET {} WHERE rowid=?'.format(', '.join(sets))
         values = list(data.values())
         values.append(rowid)
         cur.execute(sql, values)
     conn.commit()
     return redirect('/')
 
-@app.route('/edit/Super_Secret/<rowid>', methods=['GET'])
-def Super_SecretEdit(rowid):
+@app.route('/edit/superSecret/<rowid>', methods=['GET'])
+def superSecretEdit(rowid):
     if isAuthorised(1) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "Super_Secret" WHERE rowid=?', (rowid, ))
+    cur.execute('SELECT * FROM "superSecret" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
-    return render_template('Super_Secret.html', data=data, rowid=rowid, encoding='utf-8')
+    return render_template('superSecret.html', data=data, rowid=rowid, encoding='utf-8')
 
+@app.route('/jsonDisplay', methods=['GET'])
+def jsonDisplay():
+    if isAuthorised(0) == False:
+        abort(401)
+    with open('cards.json', 'r') as f:
+        data = json.load(f)
+        return render_template('jsonDisplay.html', json=data, encoding='utf-8')
+    
 if __name__ == '__main__':
     import os
     os.chdir(os.path.dirname(os.path.realpath(__file__)))

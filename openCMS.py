@@ -264,7 +264,15 @@ class dataPage(page):
         self.dataType.render(pages, pythonFile, self.authLevel)
 
 class fetchPage(page):
-    """Page that fetches contents of a json file and displays them once loaded"""
+    """Page that fetches contents of a json file and displays it as cards once loaded.\\
+        The json should be a list of items with each item having these keys:
+            -header: text to display into a card header
+            -img: a link to an image that can be interpreted by the browser
+            -title: a title of the card
+            -content: the text to be displayed on the card
+            -href: link at the bottom of the card pointing to the read more location
+        All other keys will be interpreted as elements to be displayed in a bootsrap list group"""
+    
     def setSource(self, filename:str):
         """Sets the provided filename as the source json file"""
         if not isinstance(filename, str):
@@ -281,7 +289,7 @@ class fetchPage(page):
             if home:
                 pythonFile.write(homePageCodeStart % self.name)
             else:
-                pythonFile.write(normalPageCodeStart % (self.name) * 2)
+                pythonFile.write(normalPageCodeStart % (self.name, self.name))
             pythonFile.write(authCheck % self.authLevel)
             pythonFile.write(fetchPageCode % (self.filename, self.name))
 
@@ -322,10 +330,10 @@ class app:
         self.name = name
         os.makedirs('./%s/templates' % self.name, exist_ok=True)
         os.chdir('./%s' % self.name)
-        self.db = db("%s\main.db" % os.getcwd()) #
+        self.db = db("%s\main.db" % os.getcwd()) #initialise the database
         self.pages = []
         self.home = None
-        self.footer = None
+        self.footer = ''
 
     def addPage(self, newPage:page) -> None:
         """Adds the page to the app"""
@@ -360,13 +368,14 @@ class app:
         with open('./app.py', 'w') as f:
             f.write(skeleton % os.path.basename(self.db.filename))
             for page in self.pages:
-                if len(page.footerContent) > 0:
+                if len(page.footerContent) == 0:
                     page.footerContent = self.footer
                 if isinstance(page, dataPage):
                     self.db.addData(page.dataType)
                 elif isinstance(page, fetchPage):
-                    with open(page.filename, 'w') as f: #create the source file
-                        f.write('')
+                    if not os.path.isfile(page.filename):
+                        with open(page.filename, 'w') as s: #create the source file
+                            s.write('{}')
                 page.render(self.pages, f, page == self.home)
             f.write(codeFooter)
         self.db.conn.close()
