@@ -70,6 +70,14 @@
                                 </div>
                             </div>
                             
+                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+                                <label for="uid" class="form-label">uid</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="uid" id="uid" aria-describedby="addon"  {% if data is defined %}  value="{{data[3]}}" {%endif%}  >
+                                    
+                                </div>
+                            </div>
+                            
                         </div>
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>

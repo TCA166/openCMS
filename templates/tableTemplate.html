@@ -23,7 +23,11 @@
                 {%endfor%}
                 <td><a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                     {%for child in data.children%}
-                        <a href="/new/{{child.name}}/{{'{{item[1]}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
+                        {%if child.parentName == 'rowid'%}
+                        <a href="/new/{{child.name}}/{{'{{item[0]}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
+                        {%else%}
+                        <a href="/new/{{child.name}}/{{'{{item[' + getIndexWhereName(child.parentName, data.fields) + ']}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
+                        {%endif%}
                     {%endfor%}
                 </td>
             </tr>

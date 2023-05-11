@@ -52,7 +52,7 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     {%for key, value in item.items()%}
-                        {%if key not in ("img", "title", "content", "href")%}
+                        {%if key not in ("img", "title", "content", "href", "hdr")%}
                         <li class="list-group-item {{key}}" id="{{key}}">{{value}}</li>
                         {%endif%}
                     {%endfor%}

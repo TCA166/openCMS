@@ -53,6 +53,8 @@
             
             <th scope="col">Age</th>
             
+            <th scope="col">uid</th>
+            
             <th scope="col" style="width:10%;">
                 
                 <a href="/new/Client" class="btn btn-success" style="width:100%;">New Client</a>
@@ -76,9 +78,15 @@
                     <td name="Age">{{item[3]}}yrs</td>
                     
                 
+                    
+                    <td name="uid">{{item[4]}}</td>
+                    
+                
                 <td><a href="/edit/Client/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                     
-                        <a href="/new/Product/{{item[1]}}" class="btn btn-success" style="width:100%;">New Product</a>
+                        
+                        <a href="/new/Product/{{item[0]}}" class="btn btn-success" style="width:100%;">New Product</a>
+                        
                     
                 </td>
             </tr>

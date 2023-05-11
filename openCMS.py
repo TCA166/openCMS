@@ -14,9 +14,15 @@ def __renderTable(dataType:'dataType'):
 def __isField(object):
     return isinstance(object, field)
 
+def __getIndexWhereName(name:str, list:list['field']):
+    for idx, item in enumerate(list):
+        if item.name == name:
+            return str(idx + 1)
+
 #so that's something cool: we import python functions into jinja
 environment.globals['renderTable'] = __renderTable
 environment.globals['isField'] = __isField
+environment.globals['getIndexWhereName'] = __getIndexWhereName
 
 sqliteTypes = ('INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC')
 
@@ -129,24 +135,76 @@ class field:
         self.required = required
         self.htmlType = htmlType
 
+class foreignField(field):
+    """A field referencing a field in a different table. Creates a foreign key in SQL"""
+    def __init__(self, referencedField:field, referencedTable:'dataType') -> None:
+        if referencedField not in referencedTable.fields:
+            raise ValueError("referencedField doesn't belong to referencedTable")
+        self.name = referencedField.name
+        self.fieldType = referencedField.fieldType
+        self.unit = referencedField.unit
+        self.filtrable = referencedField.filtrable
+        self.required = referencedField.required
+        self.htmlType = referencedField.htmlType
+        self.referencedField = referencedField
+        self.referencedTable = referencedTable
+
 class dataType:
     """A data type that will be stored in the CSM. Each dataType has it's own table in the db and holds a set amount of fields"""
     def __init__(self, name:str, fields:list[field] = None) -> None:
         if ' ' in name:
             raise ValueError('dataType names cannot contain names')
         self.name = name
-        if fields != None and isinstance(fields, list):
+        if fields != None:
+            if not isinstance(fields, list):
+                raise TypeError('The provided fields is not a list, but a %s' % fields.__class__.__name__)
             self.fields = fields
         else:
             self.fields = []
         self.children = []
         self.isChild = False
         self.parentName = ''
+        self.primary = None #None = rowid
+
+    def createForeignField(self, referencedField:field) -> foreignField:
+        """Returns a new foreign field object created based on the given field"""
+        if referencedField not in self.fields:
+            raise ValueError("Given referencedField doesn't belong to this dataType")
+        return foreignField(referencedField, self)
+
+    def createPrimaryForeignField(self) -> foreignField:
+        """Returns a foreign field object based on the primary key or if that is None based on the rowid column"""
+        if len(self.fields) < 1:
+            raise ValueError("There are no fields assigned to this dataType")
+        if self.primary != None:
+            return foreignField(self.fields[self.fields.index(self.primary)], self)
+        else:
+            #we are going to work around our own restrictions
+            rowidField = foreignField(self.fields[0], self)
+            rowidField.name = 'rowid'
+            rowidField.htmlType = 'text'
+            rowidField.fieldType = 'INTEGER'
+            rowidField.filtrable = True
+            rowidField.required = True
+            return rowidField
+
+    def setPrimary(self, newPrimary:field) -> None:
+        """Sets the provided newPrimary field as the primary key of this dataType. newPrimary must be already a field in this dataType"""
+        if newPrimary == None: #we must allow the user to reset the primary key to default
+            self.primary = newPrimary
+        if newPrimary not in self.fields:
+            raise ValueError("Provided newPrimary field doesn't belong in this dataType")
+        self.primary = newPrimary    
+        if self.fields[0] != newPrimary: #swap the first field in the list with the new Primary one
+            self.fields.remove(newPrimary)
+            self.fields.insert(0, newPrimary)
 
     def addField(self, newField:field) -> None:
         """Adds the given field to this datatype"""
         if not isinstance(newField, field):
             raise TypeError('The provided newField is not a field, but a %s' % newField.__class__.__name__)
+        if newField in self.fields:
+            raise ValueError("Duplicate fields")
         self.fields.append(newField)
 
     #def addDataField(self, newDataField:'dataType') -> None:
@@ -166,15 +224,15 @@ class dataType:
             if childField.name == self.name:
                 raise ValueError('Overlapping field names %s while attemting to addChild(). Field names of children cannot be named the same as the parent dataType' % self.name)
         first = child.fields[0]
-        child.fields[0] = field(self.name, filtrable=True, required=True)
+        child.fields[0] = self.createPrimaryForeignField()
         child.fields.append(first)
-        child.parentName = self.name
+        child.parentName = child.fields[0].name
         return child
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, authLevel:int=0) -> None:
         """Creates the neccesary endpoints and html templates for this dataType"""
         template = environment.get_template('newTemplate.html')
-        content = template.render(pages = pages, data = self)
+        content = template.render(pages = pages, data = self, pk = self.createPrimaryForeignField().name)
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
@@ -299,6 +357,7 @@ class db:
         conn = sqlite3.connect(filename)
         self.conn = conn
         try:
+            #conn.execute('DROP TABLE IF EXISTS users')
             conn.execute('CREATE TABLE "users" ( "login" TEXT NOT NULL UNIQUE, "pass" TEXT NOT NULL, "salt" TEXT, "auth" INTEGER)')
         except sqlite3.OperationalError:
             print("DB is already here.")
@@ -310,18 +369,22 @@ class db:
         if not isinstance(newDataType, dataType):
             raise TypeError('Provided newDataType is not dataType but %s' % newDataType.__class__.__name__)
         cur = self.conn.cursor()
+        cur.execute('DROP TABLE IF EXISTS %s' % newDataType.name)
         sql = 'CREATE TABLE "%s" ( %s )'
         sqlInner = []
+        sqlEnd = []
         for field in newDataType.fields:
             if isinstance(field, dataType):
                 sqlInner.append('"%sTABLE" TEXT' % field.name)
             else:
                 sqlInner.append('"%s" %s' % (field.name, field.fieldType))
+            if isinstance(field, foreignField):
+                sqlEnd.append("FOREIGN KEY(%s) REFERENCES %s(%s)" % (field.name, field.referencedTable.name, field.referencedField.name))
+        if newDataType.primary != None:
+            sqlEnd.append('PRIMARY KEY("%s")' % newDataType.primary.name)
+        sqlInner += sqlEnd
         sql = sql % (newDataType.name, ','.join(sqlInner))
-        try:
-            cur.execute(sql)
-        except sqlite3.OperationalError:
-            pass
+        cur.execute(sql)
         self.conn.commit()
 
 class app:

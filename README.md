@@ -41,20 +41,6 @@ This framework is consists of several files. Most notably the openCMS.py file wh
 appSkeleton.py which contains the backbone backend code that is the appended automatically during rendering by classes in openCMS.py, and the different template templates which are rendered using jinja to form the templates in the rendered app.
 Additionally some files are simply copied over to the result directory like the files in readyTemplates, static and the addUser.py utility.
 
-## Page types
-
-This framework has built in support for three types of pages.
-
-- Static pages  
-These are represented by the default page class. These simply display static html content loaded at app render.
-The static html content can be loaded from a file using the fromHTML() method.
-
-- Data pages  
-These simply display content within a single sql table. Additionally they contain buttons for interaction with the data.
-
-- Fetch pages  
-These display a bootsrap card deck made up of cards, which are created based on content in a given json file.
-
 ## Intended workflow
 
 Naturally you may use this framework for many things, however IMO it's best to use it to simply speed up the development process of a webapp.

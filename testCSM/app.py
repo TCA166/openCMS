@@ -141,11 +141,11 @@ def Products():
     ProductRows = cur.fetchall()
     return render_template('Products.html', ProductRows=ProductRows, encoding='utf-8')
     
-@app.route('/new/Product/<Client>', methods=['GET'])
-def Product(Client):
+@app.route('/new/Product/<rowid>', methods=['GET'])
+def Product(rowid):
     if isAuthorised(0) == False:
         abort(401)
-    return render_template('Product.html', Client=Client, encoding='utf-8')
+    return render_template('Product.html', rowid=rowid, encoding='utf-8')
     
 @app.route('/new/Product/submit', methods=['POST'])
 def ProductSubmit():
