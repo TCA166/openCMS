@@ -45,17 +45,14 @@ Additionally some files are simply copied over to the result directory like the 
 
 This framework has built in support for three types of pages.
 
-- Static pages\\
-
+- Static pages  
 These are represented by the default page class. These simply display static html content loaded at app render.
 The static html content can be loaded from a file using the fromHTML() method.
 
-- Data pages\\
-
+- Data pages  
 These simply display content within a single sql table. Additionally they contain buttons for interaction with the data.
 
-- Fetch pages\\
-
+- Fetch pages  
 These display a bootsrap card deck made up of cards, which are created based on content in a given json file.
 
 ## Intended workflow
