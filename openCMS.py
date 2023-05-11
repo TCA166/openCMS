@@ -33,21 +33,11 @@ def home():
 
 normalPageCodeStart = """
 @app.route('/%s', methods=['GET'])
-def %s():
-    if isAuthorised() == False:
-        abort(401)"""
+def %s():"""
 
 argsPageCodeStart = """
 @app.route('/%s', methods=['GET'])
-def %s(%s):
-    if isAuthorised() == False:
-        abort(401)"""
-
-getPageCodeStart = """
-@app.route('/%s', methods=['GET'])
-def %s(%s):
-    if isAuthorised() == False:
-        abort(401)"""
+def %s(%s):"""
 
 dataPageCode = """
     conn = getConn()
@@ -74,9 +64,7 @@ fetchPageCode = """
 
 postPageCodeStart = """
 @app.route('/%s', methods=['POST'])
-def %s():
-    if isAuthorised() == False:
-        abort(401)"""
+def %s():"""
 
 submitNewCode = """
     conn = getConn()
@@ -107,6 +95,10 @@ editCode = """
     data = cur.fetchall()[0]
     return render_template('%s.html', data=data, rowid=rowid, encoding='utf-8')
 """
+
+authCheck = """
+    if isAuthorised(%s) == False:
+        abort(401)"""
 
 codeFooter = """
 if __name__ == '__main__':
@@ -140,6 +132,8 @@ class field:
 class dataType:
     """A data type that will be stored in the CSM. Each dataType has it's own table in the db and holds a set amount of fields"""
     def __init__(self, name:str, fields:list[field] = None) -> None:
+        if ' ' in name:
+            raise ValueError('dataType names cannot contain names')
         self.name = name
         if fields != None and isinstance(fields, list):
             self.fields = fields
@@ -177,7 +171,7 @@ class dataType:
         child.parentName = self.name
         return child
 
-    def render(self, pages:list['page'], pythonFile:io.FileIO = None) -> None:
+    def render(self, pages:list['page'], pythonFile:io.FileIO = None, authLevel:int=0) -> None:
         """Creates the neccesary endpoints and html templates for this dataType"""
         template = environment.get_template('newTemplate.html')
         content = template.render(pages = pages, data = self)
@@ -187,24 +181,31 @@ class dataType:
             #show form
             if self.isChild:
                 pythonFile.write(argsPageCodeStart % ('new/%s/<%s>' % (self.name, self.parentName), self.name, self.parentName))
+                pythonFile.write(authCheck % authLevel)
                 pythonFile.write(argsPageCode % (self.name, '%s=%s' % (self.parentName, self.parentName)))
             else:
                 pythonFile.write(normalPageCodeStart % ('new/%s' % self.name, self.name))
+                pythonFile.write(authCheck % authLevel)
                 pythonFile.write(genericPageCode % self.name)
             #submit form
             pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
+            pythonFile.write(authCheck % authLevel)
             pythonFile.write(submitNewCode % (self.name, self.name))
             #edit form
-            pythonFile.write(getPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
+            pythonFile.write(argsPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
+            pythonFile.write(authCheck % authLevel)
             pythonFile.write(editCode % (self.name, self.name))
 
 class page:
     """A static page in the CSM with preset content"""
     def __init__(self, name:str, htmlContent:str = '', footerContent:str = ''):
+        if ' ' in name:
+            raise ValueError("Page names cannot contain spaces")
         self.name = name
         self.home = False
         self.htmlContent = htmlContent
         self.footerContent = footerContent
+        self.authLevel = 0
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
         """Creates this page's template and writes the appropriate code to the pythonFile"""
@@ -217,9 +218,15 @@ class page:
                 pythonFile.write(homePageCodeStart % self.name)
             else:
                 pythonFile.write(normalPageCodeStart % (self.name) * 2)
+            pythonFile.write(authCheck % self.authLevel)
             pythonFile.write(genericPageCode % self.name)
 
+    def setAuthLevel(self, level:int) -> None:
+        """Sets this page's min authority level. By default 0"""
+        self.authLevel = level
+
     def fromHTML(self, filename:str) -> None:
+        """Sets this page's html content to be the same as the contents of the file under the provided filename"""
         with open(filename, 'r') as f:
             self.htmlContent = f.read()
 
@@ -250,10 +257,11 @@ class dataPage(page):
                 pythonFile.write(homePageCodeStart % self.name)
             else:
                 pythonFile.write(normalPageCodeStart % (self.name, self.name))
+            pythonFile.write(authCheck % self.authLevel)
             t = ['%sRows=%sRows' % (f.name, f.name) for f in self.dataType.fields if isinstance(f, dataType)]
             t.append('%sRows=%sRows' % (self.dataType.name, self.dataType.name))
             pythonFile.write(dataPageCode % (self.dataType.name, self.dataType.name, self.name, ','.join(t)))
-        self.dataType.render(pages, pythonFile)
+        self.dataType.render(pages, pythonFile, self.authLevel)
 
 class fetchPage(page):
     """Page that fetches contents of a json file and displays them once loaded"""
@@ -274,6 +282,7 @@ class fetchPage(page):
                 pythonFile.write(homePageCodeStart % self.name)
             else:
                 pythonFile.write(normalPageCodeStart % (self.name) * 2)
+            pythonFile.write(authCheck % self.authLevel)
             pythonFile.write(fetchPageCode % (self.filename, self.name))
 
 class db:

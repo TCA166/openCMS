@@ -16,14 +16,17 @@ def getConn():
     """Returns the connected database"""
     return sqlite3.connect(r'%s')
 
-def isAuthorised():
+def isAuthorised(level:int=0):
     """Returns True or False depending on if the frontend (session) is authorised"""
     #Authorisation is binary here. Logging in simply sets an encrypted cookie with True in it.
     try:
         if session['authorised'] == False:
             return False
         else:
-            return True
+            if level <= session['level']:
+                return True
+            else:
+                return False
     except KeyError: #there isn't even a key here - the user is unauthorised
         return False
 
@@ -53,4 +56,13 @@ def login():
     exists = cur.fetchall()[0][0]
     if exists == 1:
         session['authorised'] = True
+        cur.execute('SELECT auth FROM users WHERE login=? AND pass=?', (login, key))
+        auth = cur.fetchall()[0][0]
+        session['level'] = auth
+    return redirect(url_for('home'))
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['authorised'] = False
+    session['level'] = None
     return redirect(url_for('home'))

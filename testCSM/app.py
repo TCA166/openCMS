@@ -16,26 +16,29 @@ def getConn():
     """Returns the connected database"""
     return sqlite3.connect(r'main.db')
 
-def isAuthorised():
+def isAuthorised(level:int=0):
     """Returns True or False depending on if the frontend (session) is authorised"""
     #Authorisation is binary here. Logging in simply sets an encrypted cookie with True in it.
     try:
         if session['authorised'] == False:
             return False
         else:
-            return True
+            if level <= session['level']:
+                return True
+            else:
+                return False
     except KeyError: #there isn't even a key here - the user is unauthorised
         return False
 
 @app.errorhandler(404)
 def notFound(e):
-    return render_template('404.html', ), 404
+    return render_template('404.html'), 404
 @app.errorhandler(401)
 def authFailed(e):
-    return render_template('401.html', ), 401
+    return render_template('401.html'), 401
 @app.errorhandler(500)
 def serverError(e):
-    return render_template('500.html', ), 500
+    return render_template('500.html'), 500
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -53,6 +56,15 @@ def login():
     exists = cur.fetchall()[0][0]
     if exists == 1:
         session['authorised'] = True
+        cur.execute('SELECT auth FROM users WHERE login=? AND pass=?', (login, key))
+        auth = cur.fetchall()[0][0]
+        session['level'] = auth
+    return redirect(url_for('home'))
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    session['authorised'] = False
+    session['level'] = None
     return redirect(url_for('home'))
 
 @app.route('/', methods=['GET'])
@@ -60,11 +72,13 @@ def login():
 def home():
     if isAuthorised() == False:
         return render_template('auth.html', encoding='utf-8')
+    if isAuthorised(0) == False:
+        abort(401)
     return render_template('Home.html', encoding='utf-8')
     
 @app.route('/Clients', methods=['GET'])
 def Clients():
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
@@ -75,13 +89,13 @@ def Clients():
     
 @app.route('/new/Client', methods=['GET'])
 def Client():
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     return render_template('Client.html', encoding='utf-8')
     
 @app.route('/new/Client/submit', methods=['POST'])
 def ClientSubmit():
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
@@ -105,7 +119,7 @@ def ClientSubmit():
 
 @app.route('/edit/Client/<rowid>', methods=['GET'])
 def ClientEdit(rowid):
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
@@ -115,7 +129,7 @@ def ClientEdit(rowid):
 
 @app.route('/Products', methods=['GET'])
 def Products():
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
@@ -126,13 +140,13 @@ def Products():
     
 @app.route('/new/Product/<Client>', methods=['GET'])
 def Product(Client):
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     return render_template('Product.html', Client=Client, encoding='utf-8')
     
 @app.route('/new/Product/submit', methods=['POST'])
 def ProductSubmit():
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
@@ -156,13 +170,64 @@ def ProductSubmit():
 
 @app.route('/edit/Product/<rowid>', methods=['GET'])
 def ProductEdit(rowid):
-    if isAuthorised() == False:
+    if isAuthorised(0) == False:
         abort(401)
     conn = getConn()
     cur = conn.cursor()
     cur.execute('SELECT * FROM "Product" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
     return render_template('Product.html', data=data, rowid=rowid, encoding='utf-8')
+
+@app.route('/secretPage', methods=['GET'])
+def secretPage():
+    if isAuthorised(1) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    tableName = 'Super_Secret'
+    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    Super_SecretRows = cur.fetchall()
+    return render_template('secretPage.html', Super_SecretRows=Super_SecretRows, encoding='utf-8')
+    
+@app.route('/new/Super_Secret', methods=['GET'])
+def Super_Secret():
+    if isAuthorised(1) == False:
+        abort(401)
+    return render_template('Super_Secret.html', encoding='utf-8')
+    
+@app.route('/new/Super_Secret/submit', methods=['POST'])
+def Super_SecretSubmit():
+    if isAuthorised(1) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    data = dict(request.form)
+    rowid = data['rowid']
+    data.pop('rowid', None)
+    if rowid == '':
+        placeholders = ', '.join('?' * len(list(data.values())))
+        sql = 'INSERT INTO "Super_Secret" VALUES ({})'.format(placeholders)
+        cur.execute(sql, list(data.values()))
+    else:
+        sets = []
+        for key in data:
+            sets.append(key + ' = ?')
+        sql = 'UPDATE "Super_Secret" SET {} WHERE rowid=?'.format(', '.join(sets))
+        values = list(data.values())
+        values.append(rowid)
+        cur.execute(sql, values)
+    conn.commit()
+    return redirect('/')
+
+@app.route('/edit/Super_Secret/<rowid>', methods=['GET'])
+def Super_SecretEdit(rowid):
+    if isAuthorised(1) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM "Super_Secret" WHERE rowid=?', (rowid, ))
+    data = cur.fetchall()[0]
+    return render_template('Super_Secret.html', data=data, rowid=rowid, encoding='utf-8')
 
 if __name__ == '__main__':
     import os

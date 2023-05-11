@@ -21,6 +21,13 @@ product = clients.addChild(product)
 productPage = dataPage('Products')
 productPage.setData(product)
 newApp.addPage(productPage)
+#create a fourth page, displaying a secret datatype
+secret = field('Secret')
+secretType = dataType('superSecret', [secret])
+secretPage = dataPage('secretPage')
+secretPage.setAuthLevel(1)
+secretPage.setData(secretType)
+newApp.addPage(secretPage)
 #finally render and launch
 newApp.render()
 newApp.launch() #this optional but useful for fast debugging
