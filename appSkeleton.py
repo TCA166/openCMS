@@ -29,13 +29,13 @@ def isAuthorised():
 
 @app.errorhandler(404)
 def notFound(e):
-    return render_template('404.html', ), 404
+    return render_template('404.html'), 404
 @app.errorhandler(401)
 def authFailed(e):
-    return render_template('401.html', ), 401
+    return render_template('401.html'), 401
 @app.errorhandler(500)
 def serverError(e):
-    return render_template('500.html', ), 500
+    return render_template('500.html'), 500
 
 @app.route('/login', methods=['POST'])
 def login():

@@ -18,9 +18,9 @@ def __isField(object):
 environment.globals['renderTable'] = __renderTable
 environment.globals['isField'] = __isField
 
-sqliteTypes = ['INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC']
+sqliteTypes = ('INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC')
 
-inputType = ['checkbox', 'color', 'date', 'email', 'file', 'image', 'number', 'password', 'range', 'text', 'tel']
+inputType = ('checkbox', 'color', 'date', 'email', 'file', 'image', 'number', 'password', 'range', 'text', 'tel')
 
 #here a whole bunch of python code templates to add to the skeleton file as needed
 
@@ -206,7 +206,7 @@ class page:
         self.htmlContent = htmlContent
         self.footerContent = footerContent
 
-    def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False, ) -> None:
+    def render(self, pages:list['page'], pythonFile:io.FileIO = None, home:bool = False) -> None:
         """Creates this page's template and writes the appropriate code to the pythonFile"""
         template = environment.get_template('genericTemplate.html')
         content = template.render(page=self, pages=pages, htmlContent=self.htmlContent, footerContent=self.footerContent)
@@ -218,6 +218,14 @@ class page:
             else:
                 pythonFile.write(normalPageCodeStart % (self.name) * 2)
             pythonFile.write(genericPageCode % self.name)
+
+    def fromHTML(self, filename:str) -> None:
+        with open(filename, 'r') as f:
+            self.htmlContent = f.read()
+
+    def fromHTML(self, file:io.FileIO) -> None:
+        """Sets this page's html content to be the same as the contents of the provided file"""
+        self.htmlContent = file.read()
 
     def toPage(self) -> 'page':
         """Returns a new page object generated with this one's attributes"""
@@ -308,6 +316,7 @@ class app:
         self.db = db("%s\main.db" % os.getcwd()) #
         self.pages = []
         self.home = None
+        self.footer = None
 
     def addPage(self, newPage:page) -> None:
         """Adds the page to the app"""
@@ -325,6 +334,10 @@ class app:
             raise Exception('Page %s is not assigned to %s app' % (newPage.name, self.name))
         self.home = newPage
 
+    def setFooter(self, footer:str) -> None:
+        """Sets this app's global footer that will be present in every page unless a page's footerContent attribute has length > 0"""
+        self.footer = footer
+
     def render(self) -> None:
         """Creates the app"""
         if self.home == None:
@@ -338,6 +351,8 @@ class app:
         with open('./app.py', 'w') as f:
             f.write(skeleton % os.path.basename(self.db.filename))
             for page in self.pages:
+                if len(page.footerContent) > 0:
+                    page.footerContent = self.footer
                 if isinstance(page, dataPage):
                     self.db.addData(page.dataType)
                 elif isinstance(page, fetchPage):
