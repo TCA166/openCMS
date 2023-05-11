@@ -2,7 +2,17 @@
 
 ## An open python CMS webapp generator
 
-This package provides a simple yet effective interface that will create a fully functional python Flask webapp intended to be used as a CMS(Customer Management System), but in theory may be customized to display anything.
+This package provides a simple yet effective framework that will create a fully functional python Flask webapp capable of displaying data from a user defined data structure in a really short time. This includes all that is needed to run the app: backend python script, the sqLite database and the jinja templates.
+
+## How it works
+
+1. You create a script using the openCSM classes that defines a webapp
+2. You run the script ensuring all the necessary files are there
+3. openCSM based on your defined objects generates a backend, database and jinja templates for your webapp.
+If you did everything properly it should be ready to run.  
+
+Amazing isn't it? Don't believe what I'm claiming here?
+Let's look at an example of how to create a webapp using openCSM:
 
 ## Usage
 
@@ -16,8 +26,8 @@ thisApp = app('testCMS')
 #next a generic page object
 testPage = page('Home', thisApp.name)
 #we then add this page to the app
-thisApp.setHome(testPage)
 thisApp.addPage(testPage)
+thisApp.setHome(testPage)
 #after that let's create a page for displaying sql data
 testDataPage = dataPage('Data')
 #each dataPage holds a single dataType, and each dataType holds n fields
@@ -33,13 +43,13 @@ thisApp.render()
 
 Quite fast and easy isn't it?  
 Then you may customize the end result of the script to your desires, adding new features or changing whatever you want!  
-A more detailed usage example you can find [here](./testRender.py)
+A more detailed usage example you can find [here](./testRender.py) and the result of running that script is in [this folder](./testCSM/).
 
-## How it works
+## Data structure
 
-This framework is consists of several files. Most notably the openCMS.py file which contains the classes used for the rendering itself,
-appSkeleton.py which contains the backbone backend code that is the appended automatically during rendering by classes in openCMS.py, and the different template templates which are rendered using jinja to form the templates in the rendered app.
-Additionally some files are simply copied over to the result directory like the files in readyTemplates, static and the addUser.py utility.
+The dataType class serves as the python representation of a table.
+A single dataType may hold a number of fields each with their own attributes(or foreignFields that create foreign keys in the rendering step), and more interestingly may be set as children to each other, which creates a 1:n relation between the dataTypes with the child being on the n end of the relation.
+During the rendering step this data structure is translated to a sqLite database, and in theory this structure may be translated to a database completely separately from the rendering process.
 
 ## Intended workflow
 
