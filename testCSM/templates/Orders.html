@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>secretPage</title>
+        <title>Orders</title>
         <meta charset="utf-8" />
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
@@ -30,11 +30,11 @@
                 </li>
                 
                 <li class="nav-item">
-                    <a class="nav-link h1 active" href="/secretPage">secretPage</a>
+                    <a class="nav-link h1 " href="/secretPage">secretPage</a>
                 </li>
                 
                 <li class="nav-item">
-                    <a class="nav-link h1 " href="/Orders">Orders</a>
+                    <a class="nav-link h1 active" href="/Orders">Orders</a>
                 </li>
                 
                 <li class="nav-item">
@@ -52,25 +52,97 @@
         <tr>
             
             
-            <th scope="col">Secret</th>
+            <th scope="col">name</th>
+            
+            
+            
+            <th scope="col">Products</th>
             
             
             <th scope="col" style="width:10%;">
                 
-                <a href="/new/superSecret" class="btn btn-success" style="width:100%;">New superSecret</a>
+                <a href="/new/order" class="btn btn-success" style="width:100%;">New order</a>
                 
             </th>
         </tr>
     </thead>
     <tbody>
-        {%for item in superSecretRows%}
+        {%for item in orderRows%}
             <tr name="row">
                 
                     
-                    <td name="Secret">{{item[1]}}</td>
+                    <td name="name">{{item[1]}}</td>
                     
                 
-                <td><a href="/edit/superSecret/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    
+                        <table class="table table-hover h-100">
+    <thead class="tableFixHead bg-body">
+        <tr>
+            
+            
+            <th scope="col">name</th>
+            
+            
+            
+            <th scope="col">count</th>
+            
+            
+            
+            
+            <th scope="col" style="width:10%;">
+                
+                <a href="/new/Products" class="btn btn-success" style="width:100%;">New Products</a>
+                
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for item in ProductsRows%}
+            <tr name="row">
+                
+                    
+                    <td name="name">{{item[1]}}</td>
+                    
+                
+                    
+                    <td name="count">{{item[2]}}</td>
+                    
+                
+                    
+                        <table class="table table-hover h-100">
+    <thead class="tableFixHead bg-body">
+        <tr>
+            
+            <th scope="col" style="width:10%;">
+                
+                <a href="/new/rowid" class="btn btn-success" style="width:100%;">New rowid</a>
+                
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {%for item in rowidRows%}
+            <tr name="row">
+                
+                <td><a href="/edit/rowid/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    
+                </td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
+                    
+                
+                <td><a href="/edit/Products/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    
+                </td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
+                    
+                
+                <td><a href="/edit/order/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                     
                 </td>
             </tr>

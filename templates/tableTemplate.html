@@ -2,7 +2,9 @@
     <thead class="tableFixHead bg-body">
         <tr>
             {%for field in data.fields%}
-            <th scope="col">{%if field.filtrable%}<input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, '{{field.name}}');">{%endif%}{{field.name}}</th>
+            {%if (isField(field) and not field.hidden) or not isField(field)%}
+            <th scope="col">{%if field.filtrable%}<input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, '{{field.name}}');">{%endif%}{{field.displayName}}</th>
+            {%endif%}
             {%endfor%}
             <th scope="col" style="width:10%;">
                 {%if not data.isChild%}
@@ -15,7 +17,7 @@
         {{'{%for item in ' + data.name + 'Rows%}'}}
             <tr name="row">
                 {%for thisField in data.fields%}
-                    {%if isField(thisField)%}
+                    {%if isField(thisField) and not thisField.hidden%}
                     <td name="{{thisField.name}}">{{'{{item[' + loop.index|string + ']}}' + thisField.unit}}</td>
                     {%else%}
                         {{renderTable(thisField)}}

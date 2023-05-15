@@ -31,6 +31,10 @@
                 </li>
                 
                 <li class="nav-item">
+                    <a class="nav-link h1" href="/Orders">Orders</a>
+                </li>
+                
+                <li class="nav-item">
                     <a class="nav-link h1" href="/jsonDisplay">jsonDisplay</a>
                 </li>
                 
@@ -42,35 +46,48 @@
                 <div class="card-body">
                     <form action="/new/Product/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
-                        <div class="mb-3 ">
-                            
-                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-                                <label for="rowid" class="form-label">rowid</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="rowid" id="rowid" aria-describedby="addon"  readonly value="{%if rowid is defined %}{{rowid}}{%else%}{{data[0]}}{%endif%}" required>
-                                    
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-                                <label for="Price" class="form-label">Price</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" name="Price" id="Price" aria-describedby="addon$"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
-                                    
-                                    <span class="input-group-text" id="addon$">$</span>
-                                    
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-                                <label for="Product name" class="form-label">Product name</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="Product name" id="Product name" aria-describedby="addon"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
-                                    
-                                </div>
-                            </div>
-                            
-                        </div>
+                        <b>Create a new Product element</b>
+<div class="mb-3" style="margin-left:1%">
+    
+        
+        
+    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+        <label for="rowid" class="form-label">Client</label>
+        <div class="input-group">
+            <input type="text" class="form-control" name="rowid" id="rowid" aria-describedby="addon"  readonly value="{%if rowid is defined %}{{rowid}}{%else%}{{data[0]}}{%endif%}" required>
+            
+        </div>
+    </div>
+        
+        
+    
+        
+        
+    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+        <label for="Price" class="form-label">Price</label>
+        <div class="input-group">
+            <input type="number" class="form-control" name="Price" id="Price" aria-describedby="addon$"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
+            
+            <span class="input-group-text" id="addon$">$</span>
+            
+        </div>
+    </div>
+        
+        
+    
+        
+        
+    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+        <label for="Product name" class="form-label">Product name</label>
+        <div class="input-group">
+            <input type="text" class="form-control" name="Product name" id="Product name" aria-describedby="addon"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
+            
+        </div>
+    </div>
+        
+        
+    
+</div>
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
                     </form>

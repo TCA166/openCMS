@@ -11,6 +11,11 @@ def __renderTable(dataType:'dataType'):
     content = template.render(data = dataType)
     return content
 
+def __renderTableInput(dataType:'dataType'):
+    template = environment.get_template('tableInputTemplate.html')
+    content = template.render(data = dataType)
+    return content
+
 def __isField(object):
     return isinstance(object, field)
 
@@ -23,6 +28,7 @@ def __getIndexWhereName(name:str, list:list['field']):
 environment.globals['renderTable'] = __renderTable
 environment.globals['isField'] = __isField
 environment.globals['getIndexWhereName'] = __getIndexWhereName
+environment.globals['renderTableInput'] = __renderTableInput
 
 sqliteTypes = ('INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC')
 
@@ -47,12 +53,11 @@ def %s(%s):"""
 
 dataPageCode = """
     conn = getConn()
-    cur = conn.cursor()
-    tableName = '%s'
-    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
-    %sRows = cur.fetchall()
-    return render_template('%s.html', %s, encoding='utf-8')
-    """
+    cur = conn.cursor()"""
+
+sqlFetchCode = """
+    cur.execute('SELECT rowid, * FROM "%s"')
+    %sRows = cur.fetchall()"""
 
 genericPageCode = """
     return render_template('%s.html', encoding='utf-8')
@@ -134,6 +139,16 @@ class field:
         self.filtrable = filtrable
         self.required = required
         self.htmlType = htmlType
+        self.hidden = False
+        self.displayName = name
+
+    def setDisplayName(self, name:str) -> None:
+        """Sets the display name to the given name"""
+        self.displayName = name
+
+    def resetDisplayName(self) -> None:
+        """Resets the display name to the normal name"""
+        self.displayName = self.name
 
 class foreignField(field):
     """A field referencing a field in a different table. Creates a foreign key in SQL"""
@@ -148,6 +163,7 @@ class foreignField(field):
         self.htmlType = referencedField.htmlType
         self.referencedField = referencedField
         self.referencedTable = referencedTable
+        self.hidden = False
 
 class dataType:
     """A data type that will be stored in the CSM. Each dataType has it's own table in the db and holds a set amount of fields"""
@@ -165,14 +181,15 @@ class dataType:
         self.isChild = False
         self.parentName = ''
         self.primary = None #None = rowid
+        self.displayName = name
 
-    def createForeignField(self, referencedField:field) -> foreignField:
+    def getForeignField(self, referencedField:field) -> foreignField:
         """Returns a new foreign field object created based on the given field"""
         if referencedField not in self.fields:
             raise ValueError("Given referencedField doesn't belong to this dataType")
         return foreignField(referencedField, self)
 
-    def createPrimaryForeignField(self) -> foreignField:
+    def getPrimaryForeignField(self) -> foreignField:
         """Returns a foreign field object based on the primary key or if that is None based on the rowid column"""
         if len(self.fields) < 1:
             raise ValueError("There are no fields assigned to this dataType")
@@ -186,6 +203,7 @@ class dataType:
             rowidField.fieldType = 'INTEGER'
             rowidField.filtrable = True
             rowidField.required = True
+            rowidField.setDisplayName(self.name)
             return rowidField
 
     def setPrimary(self, newPrimary:field) -> None:
@@ -207,10 +225,13 @@ class dataType:
             raise ValueError("Duplicate fields")
         self.fields.append(newField)
 
-    #def addDataField(self, newDataField:'dataType') -> None:
-    #    if not isinstance(newDataField, dataType):
-    #        raise TypeError('The provided newDataField is not a dataType, but a %s' % newDataField.__class__.__name__)
-    #    self.fields.append(newDataField)
+    def addDataField(self, newDataField:'dataType') -> None:
+        if not isinstance(newDataField, dataType):
+            raise TypeError('The provided newDataField is not a dataType, but a %s' % newDataField.__class__.__name__)
+        pForeign = self.getPrimaryForeignField()
+        pForeign.hidden = True
+        newDataField.addField(pForeign)
+        self.fields.append(newDataField)
 
     def addChild(self, child:'dataType') -> 'dataType':
         """Sets the provided datatype as a child to this datatype. Be sure to get the returned altered object"""
@@ -224,7 +245,7 @@ class dataType:
             if childField.name == self.name:
                 raise ValueError('Overlapping field names %s while attemting to addChild(). Field names of children cannot be named the same as the parent dataType' % self.name)
         first = child.fields[0]
-        child.fields[0] = self.createPrimaryForeignField()
+        child.fields[0] = self.getPrimaryForeignField()
         child.fields.append(first)
         child.parentName = child.fields[0].name
         return child
@@ -232,7 +253,7 @@ class dataType:
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, authLevel:int=0) -> None:
         """Creates the neccesary endpoints and html templates for this dataType"""
         template = environment.get_template('newTemplate.html')
-        content = template.render(pages = pages, data = self, pk = self.createPrimaryForeignField().name)
+        content = template.render(pages = pages, data = self, pk = self.getPrimaryForeignField().name)
         with open('./templates/%s.html' % self.name, 'w') as f:
             f.write(content)
         if pythonFile != None:
@@ -316,9 +337,14 @@ class dataPage(page):
             else:
                 pythonFile.write(normalPageCodeStart % (self.name, self.name))
             pythonFile.write(authCheck % self.authLevel)
-            t = ['%sRows=%sRows' % (f.name, f.name) for f in self.dataType.fields if isinstance(f, dataType)]
+            dataTypeFields = [f for f in self.dataType.fields if isinstance(f, dataType)]
+            t = ['%sRows=%sRows' % (f.name, f.name) for f in dataTypeFields]
             t.append('%sRows=%sRows' % (self.dataType.name, self.dataType.name))
-            pythonFile.write(dataPageCode % (self.dataType.name, self.dataType.name, self.name, ','.join(t)))
+            pythonFile.write(dataPageCode)
+            pythonFile.write(sqlFetchCode % (self.dataType.name, self.dataType.name))
+            for f in dataTypeFields:
+                pythonFile.write(sqlFetchCode % (f.name, f.name))
+            pythonFile.write(argsPageCode % (self.name, ', '.join(t)))
         self.dataType.render(pages, pythonFile, self.authLevel)
 
 class fetchPage(page):
@@ -369,22 +395,27 @@ class db:
         if not isinstance(newDataType, dataType):
             raise TypeError('Provided newDataType is not dataType but %s' % newDataType.__class__.__name__)
         cur = self.conn.cursor()
-        cur.execute('DROP TABLE IF EXISTS %s' % newDataType.name)
+        cur.execute('DROP TABLE IF EXISTS "%s"' % newDataType.name)
         sql = 'CREATE TABLE "%s" ( %s )'
         sqlInner = []
         sqlEnd = []
         for field in newDataType.fields:
             if isinstance(field, dataType):
                 sqlInner.append('"%sTABLE" TEXT' % field.name)
+                self.addData(field)
             else:
                 sqlInner.append('"%s" %s' % (field.name, field.fieldType))
             if isinstance(field, foreignField):
-                sqlEnd.append("FOREIGN KEY(%s) REFERENCES %s(%s)" % (field.name, field.referencedTable.name, field.referencedField.name))
+                sqlEnd.append('FOREIGN KEY(%s) REFERENCES "%s"(%s)' % (field.name, field.referencedTable.name, field.referencedField.name))
         if newDataType.primary != None:
             sqlEnd.append('PRIMARY KEY("%s")' % newDataType.primary.name)
         sqlInner += sqlEnd
         sql = sql % (newDataType.name, ','.join(sqlInner))
-        cur.execute(sql)
+        try:
+            cur.execute(sql)
+        except sqlite3.OperationalError as e:
+            print(e)
+            print(sql)
         self.conn.commit()
 
 class app:

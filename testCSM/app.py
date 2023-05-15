@@ -85,8 +85,7 @@ def Clients():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    tableName = 'Client'
-    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    cur.execute('SELECT rowid, * FROM "Client"')
     ClientRows = cur.fetchall()
     return render_template('Clients.html', ClientRows=ClientRows, encoding='utf-8')
     
@@ -136,8 +135,7 @@ def Products():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    tableName = 'Product'
-    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    cur.execute('SELECT rowid, * FROM "Product"')
     ProductRows = cur.fetchall()
     return render_template('Products.html', ProductRows=ProductRows, encoding='utf-8')
     
@@ -187,8 +185,7 @@ def secretPage():
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    tableName = 'superSecret'
-    cur.execute('SELECT rowid, * FROM "{}"'.format(tableName))
+    cur.execute('SELECT rowid, * FROM "superSecret"')
     superSecretRows = cur.fetchall()
     return render_template('secretPage.html', superSecretRows=superSecretRows, encoding='utf-8')
     
@@ -231,6 +228,58 @@ def superSecretEdit(rowid):
     cur.execute('SELECT * FROM "superSecret" WHERE rowid=?', (rowid, ))
     data = cur.fetchall()[0]
     return render_template('superSecret.html', data=data, rowid=rowid, encoding='utf-8')
+
+@app.route('/Orders', methods=['GET'])
+def Orders():
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT rowid, * FROM "order"')
+    orderRows = cur.fetchall()
+    cur.execute('SELECT rowid, * FROM "Products"')
+    ProductsRows = cur.fetchall()
+    return render_template('Orders.html', ProductsRows=ProductsRows, orderRows=orderRows, encoding='utf-8')
+    
+@app.route('/new/order', methods=['GET'])
+def order():
+    if isAuthorised(0) == False:
+        abort(401)
+    return render_template('order.html', encoding='utf-8')
+    
+@app.route('/new/order/submit', methods=['POST'])
+def orderSubmit():
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    data = dict(request.form)
+    rowid = data['rowid']
+    data.pop('rowid', None)
+    if rowid == '':
+        placeholders = ', '.join('?' * len(list(data.values())))
+        sql = 'INSERT INTO "order" VALUES ({})'.format(placeholders)
+        cur.execute(sql, list(data.values()))
+    else:
+        sets = []
+        for key in data:
+            sets.append(key + ' = ?')
+        sql = 'UPDATE "order" SET {} WHERE rowid=?'.format(', '.join(sets))
+        values = list(data.values())
+        values.append(rowid)
+        cur.execute(sql, values)
+    conn.commit()
+    return redirect('/')
+
+@app.route('/edit/order/<rowid>', methods=['GET'])
+def orderEdit(rowid):
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM "order" WHERE rowid=?', (rowid, ))
+    data = cur.fetchall()[0]
+    return render_template('order.html', data=data, rowid=rowid, encoding='utf-8')
 
 @app.route('/jsonDisplay', methods=['GET'])
 def jsonDisplay():
