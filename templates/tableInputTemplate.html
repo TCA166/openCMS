@@ -1,21 +1,26 @@
 <b>Create a new {{data.name}} element</b>
-<div class="mb-3" style="margin-left:1%">
-    {%for field in data.fields%}
+<div class="mb-3" name="inputSet" style="margin-left:1%">
+    <div class="row" name="{{data.name}}row0">
+        {%for field in data.fields%}
         {%if isField(field)%}
         {%if not field.hidden %}
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="{{field.name}}" class="form-label">{{field.displayName}}</label>
-        <div class="input-group">
-            <input type="{{field.htmlType}}" class="form-control" name="{{field.name}}" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{data[' + loop.index0|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data is defined %}  value="{{data[' + loop.index0|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
-            {%if field.unit != ''%}
-            <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
-            {%endif%}
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="{{field.name}}" class="form-label">{{field.displayName}}</label>
+            <div class="input-group">
+                <input type="{{field.htmlType}}" class="form-control" name="{{field.name}}0" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{data[' + loop.index0|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data is defined %}  value="{{data[' + loop.index0|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
+                {%if field.unit != ''%}
+                <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
+                {%endif%}
+            </div>
         </div>
-    </div>
         {%endif%}
         {%else%}
         <br>
-        {{renderTableInput(field)}}
+        {{renderTableInput(field, True)}}
         {%endif%}
-    {%endfor%}
+        {%endfor%}
+    </div>
+    {%if showBtn%}
+    <button type="button" class="btn btn-secondary btn-sm" nextRow="1" onclick="newRow(this, '{{data.name}}')">Add new row</button>
+    {%endif%}
 </div>

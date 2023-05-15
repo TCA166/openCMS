@@ -47,55 +47,63 @@
                     <form action="/new/order/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
                         <b>Create a new order element</b>
-<div class="mb-3" style="margin-left:1%">
-    
+<div class="mb-3" name="inputSet" style="margin-left:1%">
+    <div class="row" name="orderrow0">
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="name" class="form-label">name</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="name" id="name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="name" class="form-label">name</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="name0" id="name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  >
+                
+            </div>
         </div>
-    </div>
         
         
-    
+        
         
         <br>
         <b>Create a new Products element</b>
-<div class="mb-3" style="margin-left:1%">
-    
+<div class="mb-3" name="inputSet" style="margin-left:1%">
+    <div class="row" name="Productsrow0">
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="name" class="form-label">name</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="name" id="name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="name" class="form-label">name</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="name0" id="name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  >
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="count" class="form-label">count</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="count" id="count" aria-describedby="addon"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="count" class="form-label">count</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="count0" id="count" aria-describedby="addon"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
+                
+            </div>
         </div>
+        
+        
+        
+        
+        
+        
+        
     </div>
-        
-        
     
-        
-        
-        
+    <button type="button" class="btn btn-secondary btn-sm" nextRow="1" onclick="newRow(this, 'Products')">Add new row</button>
     
 </div>
         
+        
+    </div>
     
 </div>
                         <button type="submit" class="btn btn-primary">Add</button>
@@ -108,4 +116,22 @@
             
         </footer>
     </body>
+    <script>
+        function newRow(el, dataName){
+            var inputSet = el.parentElement;
+            nextRowId = el.getAttribute("nextRow");
+            el.setAttribute("nextRow", nextRowId + 1);
+            row0 = document.getElementsByName(dataName + "row0")[0];
+            rowN = row0.cloneNode(true);
+            rowN.setAttribute("name", nextRowId)
+            for(child of rowN.children){
+                console.log(child)
+                if(child.classList.contains("mb-3")){
+                    input = child.children[1].children[0];
+                    input.name = input.name.replace(/.$/, nextRowId);
+                }
+            }
+            inputSet.insertBefore(rowN, el);
+        }
+    </script>
 </html>

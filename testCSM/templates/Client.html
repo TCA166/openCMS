@@ -47,57 +47,60 @@
                     <form action="/new/Client/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
                         <b>Create a new Client element</b>
-<div class="mb-3" style="margin-left:1%">
-    
+<div class="mb-3" name="inputSet" style="margin-left:1%">
+    <div class="row" name="Clientrow0">
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="Name" class="form-label">Name</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="Name" id="Name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  required>
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Name" class="form-label">Name</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="Name0" id="Name" aria-describedby="addon"  {% if data is defined %}  value="{{data[0]}}" {%endif%}  required>
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="Surname" class="form-label">Surname</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="Surname" id="Surname" aria-describedby="addon"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Surname" class="form-label">Surname</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="Surname0" id="Surname" aria-describedby="addon"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="Age" class="form-label">Age</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="Age" id="Age" aria-describedby="addonyrs"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
-            
-            <span class="input-group-text" id="addonyrs">yrs</span>
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Age" class="form-label">Age</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="Age0" id="Age" aria-describedby="addonyrs"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
+                
+                <span class="input-group-text" id="addonyrs">yrs</span>
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="uid" class="form-label">uid</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="uid" id="uid" aria-describedby="addon"  {% if data is defined %}  value="{{data[3]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="uid" class="form-label">uid</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="uid0" id="uid" aria-describedby="addon"  {% if data is defined %}  value="{{data[3]}}" {%endif%}  >
+                
+            </div>
         </div>
+        
+        
+        
     </div>
-        
-        
     
 </div>
                         <button type="submit" class="btn btn-primary">Add</button>
@@ -110,4 +113,22 @@
             
         </footer>
     </body>
+    <script>
+        function newRow(el, dataName){
+            var inputSet = el.parentElement;
+            nextRowId = el.getAttribute("nextRow");
+            el.setAttribute("nextRow", nextRowId + 1);
+            row0 = document.getElementsByName(dataName + "row0")[0];
+            rowN = row0.cloneNode(true);
+            rowN.setAttribute("name", nextRowId)
+            for(child of rowN.children){
+                console.log(child)
+                if(child.classList.contains("mb-3")){
+                    input = child.children[1].children[0];
+                    input.name = input.name.replace(/.$/, nextRowId);
+                }
+            }
+            inputSet.insertBefore(rowN, el);
+        }
+    </script>
 </html>

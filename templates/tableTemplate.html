@@ -1,4 +1,4 @@
-<table class="table table-hover h-100">
+<table class="table table-hover">
     <thead class="tableFixHead bg-body">
         <tr>
             {%for field in data.fields%}
@@ -6,11 +6,13 @@
             <th scope="col">{%if field.filtrable%}<input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, '{{field.name}}');">{%endif%}{{field.displayName}}</th>
             {%endif%}
             {%endfor%}
+            {%if showBtn%}
             <th scope="col" style="width:10%;">
                 {%if not data.isChild%}
                 <a href="/new/{{data.name}}" class="btn btn-success" style="width:100%;">New {{data.name}}</a>
                 {%endif%}
             </th>
+            {%endif%}
         </tr>
     </thead>
     <tbody>
@@ -20,9 +22,10 @@
                     {%if isField(thisField) and not thisField.hidden%}
                     <td name="{{thisField.name}}">{{'{{item[' + loop.index|string + ']}}' + thisField.unit}}</td>
                     {%else%}
-                        {{renderTable(thisField)}}
+                        <td name="{{thisField.name}}">{{renderTable(thisField, False)}}</td>
                     {%endif%}
                 {%endfor%}
+                {%if showBtn%}
                 <td><a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                     {%for child in data.children%}
                         {%if child.parentName == 'rowid'%}
@@ -32,6 +35,7 @@
                         {%endif%}
                     {%endfor%}
                 </td>
+                {%endif%}
             </tr>
         {{'{%endfor%}'}}
     </tbody>

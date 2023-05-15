@@ -26,7 +26,7 @@
                 <div class="card-body">
                     <form action="/new/{{data.name}}/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{ '{{rowid}}' }}">
-                        {{renderTableInput(data)}}
+                        {{renderTableInput(data, False)}}
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
                     </form>
@@ -37,4 +37,21 @@
             {{footerContent}}
         </footer>
     </body>
+    <script>
+        function newRow(el, dataName){
+            var inputSet = el.parentElement;
+            nextRowId = el.getAttribute("nextRow");
+            el.setAttribute("nextRow", nextRowId + 1);
+            row0 = document.getElementsByName(dataName + "row0")[0];
+            rowN = row0.cloneNode(true);
+            rowN.setAttribute("name", nextRowId)
+            for(child of rowN.children){
+                if(child.classList.contains("mb-3")){
+                    input = child.children[1].children[0];
+                    input.name = input.name.replace(/.$/, nextRowId);
+                }
+            }
+            inputSet.insertBefore(rowN, el);
+        }
+    </script>
 </html>

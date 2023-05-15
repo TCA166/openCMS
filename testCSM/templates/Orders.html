@@ -47,7 +47,7 @@
         <main>
             <div class="card">
                 <div class="card-body">
-                    <table class="table table-hover h-100">
+                    <table class="table table-hover">
     <thead class="tableFixHead bg-body">
         <tr>
             
@@ -59,11 +59,13 @@
             <th scope="col">Products</th>
             
             
+            
             <th scope="col" style="width:10%;">
                 
                 <a href="/new/order" class="btn btn-success" style="width:100%;">New order</a>
                 
             </th>
+            
         </tr>
     </thead>
     <tbody>
@@ -75,7 +77,7 @@
                     
                 
                     
-                        <table class="table table-hover h-100">
+                        <td name="Products"><table class="table table-hover">
     <thead class="tableFixHead bg-body">
         <tr>
             
@@ -89,11 +91,7 @@
             
             
             
-            <th scope="col" style="width:10%;">
-                
-                <a href="/new/Products" class="btn btn-success" style="width:100%;">New Products</a>
-                
-            </th>
+            
         </tr>
     </thead>
     <tbody>
@@ -109,42 +107,36 @@
                     
                 
                     
-                        <table class="table table-hover h-100">
+                        <td name="rowid"><table class="table table-hover">
     <thead class="tableFixHead bg-body">
         <tr>
             
-            <th scope="col" style="width:10%;">
-                
-                <a href="/new/rowid" class="btn btn-success" style="width:100%;">New rowid</a>
-                
-            </th>
+            
         </tr>
     </thead>
     <tbody>
         {%for item in rowidRows%}
             <tr name="row">
                 
-                <td><a href="/edit/rowid/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
-                    
-                </td>
+                
             </tr>
         {%endfor%}
     </tbody>
-</table>
+</table></td>
                     
                 
-                <td><a href="/edit/Products/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
-                    
-                </td>
+                
             </tr>
         {%endfor%}
     </tbody>
-</table>
+</table></td>
                     
+                
                 
                 <td><a href="/edit/order/{{item[0]}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{item[0]}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
                     
                 </td>
+                
             </tr>
         {%endfor%}
     </tbody>

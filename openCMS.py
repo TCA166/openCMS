@@ -6,14 +6,14 @@ import shutil
 
 environment = jinja2.Environment(loader=jinja2.FileSystemLoader(os.path.dirname(os.path.realpath(__file__)) + '\\templates'))
 
-def __renderTable(dataType:'dataType'):
+def __renderTable(dataType:'dataType', showBtn:bool) -> str:
     template = environment.get_template('tableTemplate.html')
-    content = template.render(data = dataType)
+    content = template.render(data = dataType, showBtn=showBtn)
     return content
 
-def __renderTableInput(dataType:'dataType'):
+def __renderTableInput(dataType:'dataType', showBtn:bool) -> str:
     template = environment.get_template('tableInputTemplate.html')
-    content = template.render(data = dataType)
+    content = template.render(data = dataType, showBtn=showBtn)
     return content
 
 def __isField(object):

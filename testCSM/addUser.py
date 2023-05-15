@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 import os
+import getpass
 
 def hash(password:'ReadeableBuffer', salt:'ReadeableBuffer') -> bytes:
     key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
@@ -17,6 +18,6 @@ def addUser(login:str, password:str, auth:int) -> None:
 if __name__ == '__main__':
     print('Welcome to the backend user adding utility.')
     login = input('New user login:')
-    password = input('New user password:')
+    password = getpass.getpass("New user password:")
     auth = input('Input new user authority level:')
     addUser(login, password, int(auth))

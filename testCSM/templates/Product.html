@@ -47,45 +47,48 @@
                     <form action="/new/Product/submit" method="post">
                         <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
                         <b>Create a new Product element</b>
-<div class="mb-3" style="margin-left:1%">
-    
+<div class="mb-3" name="inputSet" style="margin-left:1%">
+    <div class="row" name="Productrow0">
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="rowid" class="form-label">Client</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="rowid" id="rowid" aria-describedby="addon"  readonly value="{%if rowid is defined %}{{rowid}}{%else%}{{data[0]}}{%endif%}" required>
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="rowid" class="form-label">Client</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="rowid0" id="rowid" aria-describedby="addon"  readonly value="{%if rowid is defined %}{{rowid}}{%else%}{{data[0]}}{%endif%}" required>
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="Price" class="form-label">Price</label>
-        <div class="input-group">
-            <input type="number" class="form-control" name="Price" id="Price" aria-describedby="addon$"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
-            
-            <span class="input-group-text" id="addon$">$</span>
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Price" class="form-label">Price</label>
+            <div class="input-group">
+                <input type="number" class="form-control" name="Price0" id="Price" aria-describedby="addon$"  {% if data is defined %}  value="{{data[1]}}" {%endif%}  >
+                
+                <span class="input-group-text" id="addon$">$</span>
+                
+            </div>
         </div>
-    </div>
         
         
-    
         
         
-    <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-        <label for="Product name" class="form-label">Product name</label>
-        <div class="input-group">
-            <input type="text" class="form-control" name="Product name" id="Product name" aria-describedby="addon"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
-            
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Product name" class="form-label">Product name</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="Product name0" id="Product name" aria-describedby="addon"  {% if data is defined %}  value="{{data[2]}}" {%endif%}  >
+                
+            </div>
         </div>
+        
+        
+        
     </div>
-        
-        
     
 </div>
                         <button type="submit" class="btn btn-primary">Add</button>
@@ -98,4 +101,22 @@
             
         </footer>
     </body>
+    <script>
+        function newRow(el, dataName){
+            var inputSet = el.parentElement;
+            nextRowId = el.getAttribute("nextRow");
+            el.setAttribute("nextRow", nextRowId + 1);
+            row0 = document.getElementsByName(dataName + "row0")[0];
+            rowN = row0.cloneNode(true);
+            rowN.setAttribute("name", nextRowId)
+            for(child of rowN.children){
+                console.log(child)
+                if(child.classList.contains("mb-3")){
+                    input = child.children[1].children[0];
+                    input.name = input.name.replace(/.$/, nextRowId);
+                }
+            }
+            inputSet.insertBefore(rowN, el);
+        }
+    </script>
 </html>
