@@ -77,27 +77,56 @@ postPageCodeStart = """
 @app.route('/%s', methods=['POST'])
 def %s():"""
 
-submitNewCode = """
+submitNewCodeStart = """
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
     rowid = data['rowid']
-    data.pop('rowid', None)
+    data.pop('rowid', None)"""
+
+submitTypeCode = """
     if rowid == '':
-        placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "%s" VALUES ({})'.format(placeholders)
-        cur.execute(sql, list(data.values()))
+        sql = 'INSERT INTO "%s" VALUES (%s)'
+        cur.execute(sql, (%s))
     else:
-        sets = []
-        for key in data:
-            sets.append(key + ' = ?')
-        sql = 'UPDATE "%s" SET {} WHERE rowid=?'.format(', '.join(sets))
-        values = list(data.values())
+        sql = 'UPDATE "%s" SET %s WHERE rowid=?'
+        values = (%s)
         values.append(rowid)
         cur.execute(sql, values)
+    """
+
+submitMultiRowCode = """
+    i = 0
+    while %s + str(i) in data.keys():
+        fields = (%s)
+        values = (data[f + str(i)] for f in fields)
+        if rowid == '':
+            sql = 'INSERT INTO "%s" VALUES (%s)'
+            cur.execute(sql, values)
+        else:
+            sql = 'UPDATE "%s" SET %s WHERE rowid=?'
+            cur.execute(sql, %s, rowid)
+        i += 1
+    """
+
+submitNewCodeEnd = """
     conn.commit()
     return redirect('/')
-"""
+    """
+
+def submitCodeFromClass(type:'dataType', multiRow:bool=False) -> str:
+    code = ""
+    if not multiRow:
+        SQLplaceholder = ', '.join('?' * len(type.fields))
+        SQLvalueGetter = ', '.join(['data["%s0"]' % f.name for f in type.fields])
+        SQLupdatePlaceholder = ', '.join(['%s=?' % f.name for f in type.fields])
+        code += submitTypeCode % (type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder, SQLvalueGetter)
+    else:
+        pass
+    for t in (t for t in type.fields if isinstance(t, dataType)):
+        code += submitCodeFromClass(t, dataType in t.fields)
+    return code
+
 
 editCode = """
     conn = getConn()
@@ -269,7 +298,9 @@ class dataType:
             #submit form
             pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
             pythonFile.write(authCheck % authLevel)
-            pythonFile.write(submitNewCode % (self.name, self.name))
+            pythonFile.write(submitNewCodeStart)
+            pythonFile.write(submitCodeFromClass(self))
+            pythonFile.write(submitNewCodeEnd)
             #edit form
             pythonFile.write(argsPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
             pythonFile.write(authCheck % authLevel)

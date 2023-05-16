@@ -105,20 +105,17 @@ def ClientSubmit():
     rowid = data['rowid']
     data.pop('rowid', None)
     if rowid == '':
-        placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "Client" VALUES ({})'.format(placeholders)
-        cur.execute(sql, list(data.values()))
+        sql = 'INSERT INTO "Client" VALUES (?, ?, ?, ?)'
+        cur.execute(sql, (data["Name0"], data["Surname0"], data["Age0"], data["uid0"]))
     else:
-        sets = []
-        for key in data:
-            sets.append(key + ' = ?')
-        sql = 'UPDATE "Client" SET {} WHERE rowid=?'.format(', '.join(sets))
-        values = list(data.values())
+        sql = 'UPDATE "Client" SET Name=?, Surname=?, Age=?, uid=? WHERE rowid=?'
+        values = (data["Name0"], data["Surname0"], data["Age0"], data["uid0"])
         values.append(rowid)
         cur.execute(sql, values)
+    
     conn.commit()
     return redirect('/')
-
+    
 @app.route('/edit/Client/<rowid>', methods=['GET'])
 def ClientEdit(rowid):
     if isAuthorised(0) == False:
@@ -155,20 +152,17 @@ def ProductSubmit():
     rowid = data['rowid']
     data.pop('rowid', None)
     if rowid == '':
-        placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "Product" VALUES ({})'.format(placeholders)
-        cur.execute(sql, list(data.values()))
+        sql = 'INSERT INTO "Product" VALUES (?, ?, ?)'
+        cur.execute(sql, (data["rowid0"], data["Price0"], data["Product name0"]))
     else:
-        sets = []
-        for key in data:
-            sets.append(key + ' = ?')
-        sql = 'UPDATE "Product" SET {} WHERE rowid=?'.format(', '.join(sets))
-        values = list(data.values())
+        sql = 'UPDATE "Product" SET rowid=?, Price=?, Product name=? WHERE rowid=?'
+        values = (data["rowid0"], data["Price0"], data["Product name0"])
         values.append(rowid)
         cur.execute(sql, values)
+    
     conn.commit()
     return redirect('/')
-
+    
 @app.route('/edit/Product/<rowid>', methods=['GET'])
 def ProductEdit(rowid):
     if isAuthorised(0) == False:
@@ -205,20 +199,17 @@ def superSecretSubmit():
     rowid = data['rowid']
     data.pop('rowid', None)
     if rowid == '':
-        placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "superSecret" VALUES ({})'.format(placeholders)
-        cur.execute(sql, list(data.values()))
+        sql = 'INSERT INTO "superSecret" VALUES (?)'
+        cur.execute(sql, (data["Secret0"]))
     else:
-        sets = []
-        for key in data:
-            sets.append(key + ' = ?')
-        sql = 'UPDATE "superSecret" SET {} WHERE rowid=?'.format(', '.join(sets))
-        values = list(data.values())
+        sql = 'UPDATE "superSecret" SET Secret=? WHERE rowid=?'
+        values = (data["Secret0"])
         values.append(rowid)
         cur.execute(sql, values)
+    
     conn.commit()
     return redirect('/')
-
+    
 @app.route('/edit/superSecret/<rowid>', methods=['GET'])
 def superSecretEdit(rowid):
     if isAuthorised(1) == False:
@@ -257,20 +248,26 @@ def orderSubmit():
     rowid = data['rowid']
     data.pop('rowid', None)
     if rowid == '':
-        placeholders = ', '.join('?' * len(list(data.values())))
-        sql = 'INSERT INTO "order" VALUES ({})'.format(placeholders)
-        cur.execute(sql, list(data.values()))
+        sql = 'INSERT INTO "order" VALUES (?, ?)'
+        cur.execute(sql, (data["name0"], data["Products0"]))
     else:
-        sets = []
-        for key in data:
-            sets.append(key + ' = ?')
-        sql = 'UPDATE "order" SET {} WHERE rowid=?'.format(', '.join(sets))
-        values = list(data.values())
+        sql = 'UPDATE "order" SET name=?, Products=? WHERE rowid=?'
+        values = (data["name0"], data["Products0"])
         values.append(rowid)
         cur.execute(sql, values)
+    
+    if rowid == '':
+        sql = 'INSERT INTO "Products" VALUES (?, ?, ?)'
+        cur.execute(sql, (data["name0"], data["count0"], data["rowid0"]))
+    else:
+        sql = 'UPDATE "Products" SET name=?, count=?, rowid=? WHERE rowid=?'
+        values = (data["name0"], data["count0"], data["rowid0"])
+        values.append(rowid)
+        cur.execute(sql, values)
+    
     conn.commit()
     return redirect('/')
-
+    
 @app.route('/edit/order/<rowid>', methods=['GET'])
 def orderEdit(rowid):
     if isAuthorised(0) == False:

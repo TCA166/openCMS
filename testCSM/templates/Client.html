@@ -122,7 +122,6 @@
             rowN = row0.cloneNode(true);
             rowN.setAttribute("name", nextRowId)
             for(child of rowN.children){
-                console.log(child)
                 if(child.classList.contains("mb-3")){
                     input = child.children[1].children[0];
                     input.name = input.name.replace(/.$/, nextRowId);
