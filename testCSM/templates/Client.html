@@ -45,10 +45,10 @@
             <div class="card">
                 <div class="card-body">
                     <form action="/new/Client/submit" method="post">
-                        <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
                         <b>Create a new Client element</b>
-<div class="mb-3" name="inputSet" style="margin-left:1%">
+<div name="inputSet" style="margin-left:1%; padding-bottom:5px">
     <div class="row" name="Clientrow0">
+        <input type="hidden" style="display:none;" name="Clientrowid0" value="{{Clientrowid0}}">
         
         
         
@@ -127,6 +127,7 @@
                     input.name = input.name.replace(/.$/, nextRowId);
                 }
             }
+            rowN.children[0].name = rowN.children[0].name.replace(/.$/, nextRowId);
             inputSet.insertBefore(rowN, el);
         }
     </script>

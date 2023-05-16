@@ -16,10 +16,10 @@ def __renderTableInput(dataType:'dataType', showBtn:bool) -> str:
     content = template.render(data = dataType, showBtn=showBtn)
     return content
 
-def __isField(object):
+def __isField(object) -> bool:
     return isinstance(object, field)
 
-def __getIndexWhereName(name:str, list:list['field']):
+def __getIndexWhereName(name:str, list:list['field']) -> str:
     for idx, item in enumerate(list):
         if item.name == name:
             return str(idx + 1)
@@ -35,7 +35,9 @@ sqliteTypes = ('INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC')
 inputType = ('checkbox', 'color', 'date', 'email', 'file', 'image', 'number', 'password', 'range', 'text', 'tel')
 
 #here a whole bunch of python code templates to add to the skeleton file as needed
+#the idea behind these is that they are structured to act as building blocks
 
+#beginning of the backend code for the homepage
 homePageCodeStart = """
 @app.route('/', methods=['GET'])
 @app.route('/%s', methods=['GET'])
@@ -43,91 +45,108 @@ def home():
     if isAuthorised() == False:
         return render_template('auth.html', encoding='utf-8')"""
 
+#start of backend code for a generic static page with no path args
 normalPageCodeStart = """
 @app.route('/%s', methods=['GET'])
 def %s():"""
 
+#-|- but with path args
 argsPageCodeStart = """
 @app.route('/%s', methods=['GET'])
 def %s(%s):"""
 
+#code needed in the dataPage backend
 dataPageCode = """
     conn = getConn()
     cur = conn.cursor()"""
 
+#backend code that does a SELECT
 sqlFetchCode = """
     cur.execute('SELECT rowid, * FROM "%s"')
     %sRows = cur.fetchall()"""
 
+#code that ends backend code for a generic page
 genericPageCode = """
     return render_template('%s.html', encoding='utf-8')
     """
 
+#-|- but also can fill in jinja variables 
 argsPageCode = """
     return render_template('%s.html', %s, encoding='utf-8')
     """
 
+#main backend code for a fetch page sure
 fetchPageCode = """
     with open('%s', 'r') as f:
         data = json.load(f)
         return render_template('%s.html', json=data, encoding='utf-8')
     """
 
+#generic code for a POST page
 postPageCodeStart = """
 @app.route('/%s', methods=['POST'])
 def %s():"""
 
+#start of the code for a submit endpoint
 submitNewCodeStart = """
     conn = getConn()
     cur = conn.cursor()
-    data = dict(request.form)
-    rowid = data['rowid']
-    data.pop('rowid', None)"""
+    data = dict(request.form)"""
 
+#code for handling the submission of a non multi Row datatype
 submitTypeCode = """
-    if rowid == '':
+    rowRowid = data['%srowid0']
+    if rowRowid == '':
         sql = 'INSERT INTO "%s" VALUES (%s)'
-        cur.execute(sql, (%s))
+        cur.execute(sql, (%s,))
     else:
         sql = 'UPDATE "%s" SET %s WHERE rowid=?'
-        values = (%s)
-        values.append(rowid)
+        values = (%s,)
+        values.append(rowRowid)
         cur.execute(sql, values)
     """
 
+#code for handling the submission of multi Row datatype
 submitMultiRowCode = """
     i = 0
-    while %s + str(i) in data.keys():
+    while '%srowid' + str(i) in data.keys():
         fields = (%s)
-        values = (data[f + str(i)] for f in fields)
-        if rowid == '':
+        values = [data[f + str(i)] for f in fields]
+        rowRowid = data['%srowid' + str(i)]
+        if rowRowid == '':
             sql = 'INSERT INTO "%s" VALUES (%s)'
             cur.execute(sql, values)
         else:
             sql = 'UPDATE "%s" SET %s WHERE rowid=?'
-            cur.execute(sql, %s, rowid)
+            values.append(rowRowid)
+            cur.execute(sql, values)
         i += 1
     """
 
+#end of the code for the submit endpoint
 submitNewCodeEnd = """
     conn.commit()
     return redirect('/')
     """
 
+#i have decided that the submit code is now so comploicated and convoluted
+#it now needs it's own recursive function :)
 def submitCodeFromClass(type:'dataType', multiRow:bool=False) -> str:
     code = ""
+    plainFields = [f for f in type.fields if not isinstance(f, dataType)]
+    SQLplaceholder = ', '.join('?' * len(plainFields))
+    SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields))
     if not multiRow:
-        SQLplaceholder = ', '.join('?' * len(type.fields))
-        SQLvalueGetter = ', '.join(['data["%s0"]' % f.name for f in type.fields])
-        SQLupdatePlaceholder = ', '.join(['%s=?' % f.name for f in type.fields])
-        code += submitTypeCode % (type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder, SQLvalueGetter)
+        SQLvalueGetter = ', '.join(('data["%s0"]' % f.name for f in plainFields))
+        code += submitTypeCode % (type.name, type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder, SQLvalueGetter)
     else:
-        pass
+        code += submitMultiRowCode % (type.name, ', '.join(("'%s'" % f.name for f in type.fields if not isinstance(f, dataType))),
+                                       type.name, type.name, SQLplaceholder, type.name, SQLupdatePlaceholder)
     for t in (t for t in type.fields if isinstance(t, dataType)):
-        code += submitCodeFromClass(t, dataType in t.fields)
+        code += submitCodeFromClass(t, dataType in (f.__class__ for f in type.fields))
     return code
 
-
+#code serving the edit endpoint
 editCode = """
     conn = getConn()
     cur = conn.cursor()
@@ -136,10 +155,12 @@ editCode = """
     return render_template('%s.html', data=data, rowid=rowid, encoding='utf-8')
 """
 
+#code for calling the isAuthorised function
 authCheck = """
     if isAuthorised(%s) == False:
         abort(401)"""
 
+#static code that is appended once at the bottom of the backend code
 codeFooter = """
 if __name__ == '__main__':
     import os
@@ -388,7 +409,7 @@ class fetchPage(page):
             -href: link at the bottom of the card pointing to the read more location
         All other keys will be interpreted as elements to be displayed in a bootsrap list group"""
     
-    def setSource(self, filename:str):
+    def setSource(self, filename:str) -> None:
         """Sets the provided filename as the source json file"""
         if not isinstance(filename, str):
             raise TypeError('The provided filename is not string')
@@ -410,7 +431,7 @@ class fetchPage(page):
 
 class db:
     """Database of a CSM app"""
-    def __init__(self, filename:str = 'main.db') -> None:
+    def __init__(self, filename:str = 'main.db'):
         conn = sqlite3.connect(filename)
         self.conn = conn
         try:
@@ -432,7 +453,7 @@ class db:
         sqlEnd = []
         for field in newDataType.fields:
             if isinstance(field, dataType):
-                sqlInner.append('"%sTABLE" TEXT' % field.name)
+                #sqlInner.append('"%sTABLE" TEXT' % field.name)
                 self.addData(field)
             else:
                 sqlInner.append('"%s" %s' % (field.name, field.fieldType))
@@ -451,7 +472,7 @@ class db:
 
 class app:
     """A CSM app"""
-    def __init__(self, name:str) -> None:
+    def __init__(self, name:str):
         self.name = name
         os.makedirs('./%s/templates' % self.name, exist_ok=True)
         os.chdir('./%s' % self.name)
@@ -509,4 +530,3 @@ class app:
     def launch(self, process:str = 'python') -> None:
         """Launches the app"""
         os.system("%s ./app.py" % process)
-

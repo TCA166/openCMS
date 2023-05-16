@@ -45,10 +45,10 @@
             <div class="card">
                 <div class="card-body">
                     <form action="/new/order/submit" method="post">
-                        <input type="hidden" style="display:none;" name="rowid" value="{{rowid}}">
                         <b>Create a new order element</b>
-<div class="mb-3" name="inputSet" style="margin-left:1%">
+<div name="inputSet" style="margin-left:1%; padding-bottom:5px">
     <div class="row" name="orderrow0">
+        <input type="hidden" style="display:none;" name="orderrowid0" value="{{orderrowid0}}">
         
         
         
@@ -65,8 +65,9 @@
         
         <br>
         <b>Create a new Products element</b>
-<div class="mb-3" name="inputSet" style="margin-left:1%">
+<div name="inputSet" style="margin-left:1%; padding-bottom:5px">
     <div class="row" name="Productsrow0">
+        <input type="hidden" style="display:none;" name="Productsrowid0" value="{{Productsrowid0}}">
         
         
         
@@ -130,6 +131,7 @@
                     input.name = input.name.replace(/.$/, nextRowId);
                 }
             }
+            rowN.children[0].name = rowN.children[0].name.replace(/.$/, nextRowId);
             inputSet.insertBefore(rowN, el);
         }
     </script>

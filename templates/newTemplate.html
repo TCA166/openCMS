@@ -25,7 +25,6 @@
             <div class="card">
                 <div class="card-body">
                     <form action="/new/{{data.name}}/submit" method="post">
-                        <input type="hidden" style="display:none;" name="rowid" value="{{ '{{rowid}}' }}">
                         {{renderTableInput(data, False)}}
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
@@ -51,6 +50,7 @@
                     input.name = input.name.replace(/.$/, nextRowId);
                 }
             }
+            rowN.children[0].name = rowN.children[0].name.replace(/.$/, nextRowId);
             inputSet.insertBefore(rowN, el);
         }
     </script>

@@ -102,15 +102,14 @@ def ClientSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowid = data['rowid']
-    data.pop('rowid', None)
-    if rowid == '':
+    rowRowid = data['Clientrowid0']
+    if rowRowid == '':
         sql = 'INSERT INTO "Client" VALUES (?, ?, ?, ?)'
-        cur.execute(sql, (data["Name0"], data["Surname0"], data["Age0"], data["uid0"]))
+        cur.execute(sql, (data["Name0"], data["Surname0"], data["Age0"], data["uid0"],))
     else:
         sql = 'UPDATE "Client" SET Name=?, Surname=?, Age=?, uid=? WHERE rowid=?'
-        values = (data["Name0"], data["Surname0"], data["Age0"], data["uid0"])
-        values.append(rowid)
+        values = (data["Name0"], data["Surname0"], data["Age0"], data["uid0"],)
+        values.append(rowRowid)
         cur.execute(sql, values)
     
     conn.commit()
@@ -149,15 +148,14 @@ def ProductSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowid = data['rowid']
-    data.pop('rowid', None)
-    if rowid == '':
+    rowRowid = data['Productrowid0']
+    if rowRowid == '':
         sql = 'INSERT INTO "Product" VALUES (?, ?, ?)'
-        cur.execute(sql, (data["rowid0"], data["Price0"], data["Product name0"]))
+        cur.execute(sql, (data["rowid0"], data["Price0"], data["Product name0"],))
     else:
         sql = 'UPDATE "Product" SET rowid=?, Price=?, Product name=? WHERE rowid=?'
-        values = (data["rowid0"], data["Price0"], data["Product name0"])
-        values.append(rowid)
+        values = (data["rowid0"], data["Price0"], data["Product name0"],)
+        values.append(rowRowid)
         cur.execute(sql, values)
     
     conn.commit()
@@ -196,15 +194,14 @@ def superSecretSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowid = data['rowid']
-    data.pop('rowid', None)
-    if rowid == '':
+    rowRowid = data['superSecretrowid0']
+    if rowRowid == '':
         sql = 'INSERT INTO "superSecret" VALUES (?)'
-        cur.execute(sql, (data["Secret0"]))
+        cur.execute(sql, (data["Secret0"],))
     else:
         sql = 'UPDATE "superSecret" SET Secret=? WHERE rowid=?'
-        values = (data["Secret0"])
-        values.append(rowid)
+        values = (data["Secret0"],)
+        values.append(rowRowid)
         cur.execute(sql, values)
     
     conn.commit()
@@ -245,25 +242,29 @@ def orderSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowid = data['rowid']
-    data.pop('rowid', None)
-    if rowid == '':
-        sql = 'INSERT INTO "order" VALUES (?, ?)'
-        cur.execute(sql, (data["name0"], data["Products0"]))
+    rowRowid = data['orderrowid0']
+    if rowRowid == '':
+        sql = 'INSERT INTO "order" VALUES (?)'
+        cur.execute(sql, (data["name0"],))
     else:
-        sql = 'UPDATE "order" SET name=?, Products=? WHERE rowid=?'
-        values = (data["name0"], data["Products0"])
-        values.append(rowid)
+        sql = 'UPDATE "order" SET name=? WHERE rowid=?'
+        values = (data["name0"],)
+        values.append(rowRowid)
         cur.execute(sql, values)
     
-    if rowid == '':
-        sql = 'INSERT INTO "Products" VALUES (?, ?, ?)'
-        cur.execute(sql, (data["name0"], data["count0"], data["rowid0"]))
-    else:
-        sql = 'UPDATE "Products" SET name=?, count=?, rowid=? WHERE rowid=?'
-        values = (data["name0"], data["count0"], data["rowid0"])
-        values.append(rowid)
-        cur.execute(sql, values)
+    i = 0
+    while 'Productsrowid' + str(i) in data.keys():
+        fields = ('name', 'count', 'rowid') #TODO rowid needs to be passed to the sql insert somehow but that's tricky
+        values = [data[f + str(i)] for f in fields]
+        rowRowid = data['Productsrowid' + str(i)]
+        if rowRowid == '':
+            sql = 'INSERT INTO "Products" VALUES (?, ?, ?)'
+            cur.execute(sql, values)
+        else:
+            sql = 'UPDATE "Products" SET name=?, count=?, rowid=? WHERE rowid=?'
+            values.append(rowRowid)
+            cur.execute(sql, values)
+        i += 1
     
     conn.commit()
     return redirect('/')

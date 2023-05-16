@@ -1,6 +1,7 @@
 <b>Create a new {{data.name}} element</b>
-<div class="mb-3" name="inputSet" style="margin-left:1%">
+<div name="inputSet" style="margin-left:1%; padding-bottom:5px">
     <div class="row" name="{{data.name}}row0">
+        <input type="hidden" style="display:none;" name="{{data.name}}rowid0" value="{{ '{{' + data.name + 'rowid0}}' }}">
         {%for field in data.fields%}
         {%if isField(field)%}
         {%if not field.hidden %}
