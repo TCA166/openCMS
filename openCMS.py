@@ -17,7 +17,7 @@ def __renderTableInput(dataType:'dataType', showBtn:bool) -> str:
     return content
 
 def __isField(object) -> bool:
-    return isinstance(object, field)
+    return isinstance(object, field) or isinstance(object, foreignField)
 
 def __getIndexWhereName(name:str, list:list['field']) -> str:
     for idx, item in enumerate(list):
@@ -104,6 +104,7 @@ submitTypeCode = """
         values = (%s,)
         values.append(rowRowid)
         cur.execute(sql, values)
+    %slastRowid = cur.lastrowid
     """
 
 #code for handling the submission of multi Row datatype
@@ -111,7 +112,7 @@ submitMultiRowCode = """
     i = 0
     while '%srowid' + str(i) in data.keys():
         fields = (%s)
-        values = [data[f + str(i)] for f in fields]
+        values = [%slastRowid if f=='rowid' else data["%s" + f + str(i)] for f in fields]
         rowRowid = data['%srowid' + str(i)]
         if rowRowid == '':
             sql = 'INSERT INTO "%s" VALUES (%s)'
@@ -137,11 +138,13 @@ def submitCodeFromClass(type:'dataType', multiRow:bool=False) -> str:
     SQLplaceholder = ', '.join('?' * len(plainFields))
     SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields))
     if not multiRow:
-        SQLvalueGetter = ', '.join(('data["%s0"]' % f.name for f in plainFields))
-        code += submitTypeCode % (type.name, type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder, SQLvalueGetter)
+        SQLvalueGetter = ', '.join(('data["%s%s0"]' % (type.name, f.name) for f in plainFields))
+        code += submitTypeCode % (type.name, type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder,
+                                   SQLvalueGetter, type.name)
     else:
         code += submitMultiRowCode % (type.name, ', '.join(("'%s'" % f.name for f in type.fields if not isinstance(f, dataType))),
-                                       type.name, type.name, SQLplaceholder, type.name, SQLupdatePlaceholder)
+                                       type.primary.referencedTable.name, type.name, type.name, type.name, SQLplaceholder,
+                                         type.name, SQLupdatePlaceholder)
     for t in (t for t in type.fields if isinstance(t, dataType)):
         code += submitCodeFromClass(t, dataType in (f.__class__ for f in type.fields))
     return code
@@ -187,7 +190,8 @@ class field:
         self.fieldType = fieldType
         self.unit = unit
         self.filtrable = filtrable
-        self.required = required
+        self.required = required # NOT NULL
+        self.unique = False
         self.htmlType = htmlType
         self.hidden = False
         self.displayName = name
@@ -214,6 +218,7 @@ class foreignField(field):
         self.referencedField = referencedField
         self.referencedTable = referencedTable
         self.hidden = False
+        self.unique = False
 
 class dataType:
     """A data type that will be stored in the CSM. Each dataType has it's own table in the db and holds a set amount of fields"""
@@ -263,6 +268,7 @@ class dataType:
         if newPrimary not in self.fields:
             raise ValueError("Provided newPrimary field doesn't belong in this dataType")
         self.primary = newPrimary    
+        newPrimary.unique = True
         if self.fields[0] != newPrimary: #swap the first field in the list with the new Primary one
             self.fields.remove(newPrimary)
             self.fields.insert(0, newPrimary)
@@ -281,10 +287,12 @@ class dataType:
         pForeign = self.getPrimaryForeignField()
         pForeign.hidden = True
         newDataField.addField(pForeign)
+        newDataField.setPrimary(pForeign)
+        pForeign.unique = False
         self.fields.append(newDataField)
 
-    def addChild(self, child:'dataType') -> 'dataType':
-        """Sets the provided datatype as a child to this datatype. Be sure to get the returned altered object"""
+    def addChild(self, child:'dataType') -> None:
+        """Sets the provided datatype as a child to this datatype"""
         if not isinstance(child, dataType):
             raise TypeError('The provided child is not a dataType, but a %s' % child.__class__.__name__)
         if child in self.children:
@@ -298,7 +306,7 @@ class dataType:
         child.fields[0] = self.getPrimaryForeignField()
         child.fields.append(first)
         child.parentName = child.fields[0].name
-        return child
+        #return child
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, authLevel:int=0) -> None:
         """Creates the neccesary endpoints and html templates for this dataType"""
@@ -460,7 +468,12 @@ class db:
             if isinstance(field, foreignField):
                 sqlEnd.append('FOREIGN KEY(%s) REFERENCES "%s"(%s)' % (field.name, field.referencedTable.name, field.referencedField.name))
         if newDataType.primary != None:
-            sqlEnd.append('PRIMARY KEY("%s")' % newDataType.primary.name)
+            #ok so this might seem weird... but is necessary
+            #the logic is simple. 
+            #If unique isnt True (its set by default when something is set as primary) then It's a user intervention
+            #to make the rendering think its primary but not be in SQL
+            if newDataType.primary.unique != False:
+                sqlEnd.append('PRIMARY KEY("%s")' % newDataType.primary.name)
         sqlInner += sqlEnd
         sql = sql % (newDataType.name, ','.join(sqlInner))
         try:

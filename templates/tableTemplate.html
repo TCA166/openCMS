@@ -19,8 +19,10 @@
         {{'{%for item in ' + data.name + 'Rows%}'}}
             <tr name="row">
                 {%for thisField in data.fields%}
-                    {%if isField(thisField) and not thisField.hidden%}
+                    {%if isField(thisField)%}
+                    {%if not thisField.hidden%}
                     <td name="{{thisField.name}}">{{'{{item[' + loop.index|string + ']}}' + thisField.unit}}</td>
+                    {%endif%}
                     {%else%}
                         <td name="{{thisField.name}}">{{renderTable(thisField, False)}}</td>
                     {%endif%}
