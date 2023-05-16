@@ -70,6 +70,8 @@
     </thead>
     <tbody>
         {%for item in orderRows%}
+        {%set orderrow = item[0]%}
+        
             <tr name="row">
                 
                     
@@ -98,6 +100,10 @@
     </thead>
     <tbody>
         {%for item in ProductsRows%}
+        {%set Productsrow = item[0]%}
+        
+        {%if orderrow == item[0]%}
+        
             <tr name="row">
                 
                     
@@ -118,6 +124,9 @@
                 
                 
             </tr>
+        
+        {%endif%}
+        
         {%endfor%}
     </tbody>
 </table></td>
@@ -129,6 +138,7 @@
                 </td>
                 
             </tr>
+        
         {%endfor%}
     </tbody>
 </table>

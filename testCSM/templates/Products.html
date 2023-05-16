@@ -72,6 +72,8 @@
     </thead>
     <tbody>
         {%for item in ProductRows%}
+        {%set Productrow = item[0]%}
+        
             <tr name="row">
                 
                     
@@ -98,6 +100,7 @@
                 </td>
                 
             </tr>
+        
         {%endfor%}
     </tbody>
 </table>
