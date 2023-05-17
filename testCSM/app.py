@@ -102,13 +102,13 @@ def ClientSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowRowid = data['Clientrowid0']
+    rowRowid = data['Clientrowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "Client" VALUES (?, ?, ?, ?)'
-        cur.execute(sql, (data["ClientName0"], data["ClientSurname0"], data["ClientAge0"], data["Clientuid0"],))
+        cur.execute(sql, (data["ClientName-0"], data["ClientSurname-0"], data["ClientAge-0"], data["Clientuid-0"],))
     else:
         sql = 'UPDATE "Client" SET Name=?, Surname=?, Age=?, uid=? WHERE rowid=?'
-        values = (data["ClientName0"], data["ClientSurname0"], data["ClientAge0"], data["Clientuid0"],)
+        values = [data["ClientName-0"], data["ClientSurname-0"], data["ClientAge-0"], data["Clientuid-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
     ClientlastRowid = cur.lastrowid
@@ -122,9 +122,10 @@ def ClientEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "Client" WHERE rowid=?', (rowid, ))
-    data = cur.fetchall()[0]
-    return render_template('Client.html', data=data, rowid=rowid, encoding='utf-8')
+    cur.execute('SELECT rowid, * FROM "Client" WHERE rowid=?', (rowid, ))
+    dataClient = cur.fetchall()[0]
+
+    return render_template('Client.html', Clientrowid=rowid, dataClient=dataClient, encoding='utf-8')
 
 @app.route('/Products', methods=['GET'])
 def Products():
@@ -149,13 +150,13 @@ def ProductSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowRowid = data['Productrowid0']
+    rowRowid = data['Productrowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "Product" VALUES (?, ?, ?)'
-        cur.execute(sql, (data["Productrowid0"], data["ProductPrice0"], data["ProductProduct name0"],))
+        cur.execute(sql, (data["Productrowid-0"], data["ProductPrice-0"], data["ProductProduct name-0"],))
     else:
         sql = 'UPDATE "Product" SET rowid=?, Price=?, Product name=? WHERE rowid=?'
-        values = (data["Productrowid0"], data["ProductPrice0"], data["ProductProduct name0"],)
+        values = [data["Productrowid-0"], data["ProductPrice-0"], data["ProductProduct name-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
     ProductlastRowid = cur.lastrowid
@@ -169,9 +170,10 @@ def ProductEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "Product" WHERE rowid=?', (rowid, ))
-    data = cur.fetchall()[0]
-    return render_template('Product.html', data=data, rowid=rowid, encoding='utf-8')
+    cur.execute('SELECT rowid, * FROM "Product" WHERE rowid=?', (rowid, ))
+    dataProduct = cur.fetchall()[0]
+
+    return render_template('Product.html', Productrowid=rowid, dataProduct=dataProduct, encoding='utf-8')
 
 @app.route('/secretPage', methods=['GET'])
 def secretPage():
@@ -196,13 +198,13 @@ def superSecretSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowRowid = data['superSecretrowid0']
+    rowRowid = data['superSecretrowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "superSecret" VALUES (?)'
-        cur.execute(sql, (data["superSecretSecret0"],))
+        cur.execute(sql, (data["superSecretSecret-0"],))
     else:
         sql = 'UPDATE "superSecret" SET Secret=? WHERE rowid=?'
-        values = (data["superSecretSecret0"],)
+        values = [data["superSecretSecret-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
     superSecretlastRowid = cur.lastrowid
@@ -216,9 +218,10 @@ def superSecretEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "superSecret" WHERE rowid=?', (rowid, ))
-    data = cur.fetchall()[0]
-    return render_template('superSecret.html', data=data, rowid=rowid, encoding='utf-8')
+    cur.execute('SELECT rowid, * FROM "superSecret" WHERE rowid=?', (rowid, ))
+    datasuperSecret = cur.fetchall()[0]
+
+    return render_template('superSecret.html', superSecretrowid=rowid, datasuperSecret=datasuperSecret, encoding='utf-8')
 
 @app.route('/Orders', methods=['GET'])
 def Orders():
@@ -245,22 +248,22 @@ def orderSubmit():
     conn = getConn()
     cur = conn.cursor()
     data = dict(request.form)
-    rowRowid = data['orderrowid0']
+    rowRowid = data['orderrowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "order" VALUES (?)'
-        cur.execute(sql, (data["ordername0"],))
+        cur.execute(sql, (data["ordername-0"],))
     else:
         sql = 'UPDATE "order" SET name=? WHERE rowid=?'
-        values = (data["ordername0"],)
+        values = [data["ordername-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
     orderlastRowid = cur.lastrowid
     
     i = 0
-    while 'Productsrowid' + str(i) in data.keys():
+    while 'Productsrowid' + '-' + str(i) in data.keys():
         fields = ('rowid', 'name', 'count')
-        values = [orderlastRowid if f=='rowid' else data["Products" + f + str(i)] for f in fields]
-        rowRowid = data['Productsrowid' + str(i)]
+        values = [orderlastRowid if f=='rowid' else data["Products" + f + '-' + str(i)] for f in fields]
+        rowRowid = data['Productsrowid-' + str(i)]
         if rowRowid == '':
             sql = 'INSERT INTO "Products" VALUES (?, ?, ?)'
             cur.execute(sql, values)
@@ -279,9 +282,13 @@ def orderEdit(rowid):
         abort(401)
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "order" WHERE rowid=?', (rowid, ))
-    data = cur.fetchall()[0]
-    return render_template('order.html', data=data, rowid=rowid, encoding='utf-8')
+    cur.execute('SELECT rowid, * FROM "order" WHERE rowid=?', (rowid, ))
+    dataorder = cur.fetchall()[0]
+
+    cur.execute('SELECT rowid, * FROM "Products" WHERE rowid=?', (dataorder[0], ))
+    dataProducts = cur.fetchall()
+
+    return render_template('order.html', orderrowid=rowid, dataorder=dataorder, dataProducts=dataProducts, encoding='utf-8')
 
 @app.route('/jsonDisplay', methods=['GET'])
 def jsonDisplay():

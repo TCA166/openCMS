@@ -9,6 +9,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
         <link rel="stylesheet" href="{{"{{ url_for('static',filename='style.css') }}"}}">
+        <script src="{{"{{ url_for('static',filename='newRow.js') }}"}}"></script>
     </head>
     <body>
         <header class="d-flex flex-column flex-md-row sticky-top align-items-center px-md-4 mb-3 bg-body border-bottom shadow-sm">
@@ -25,6 +26,7 @@
             <div class="card">
                 <div class="card-body">
                     <form action="/new/{{data.name}}/submit" method="post">
+                        <input type="hidden" style="display:none;" name="{{data.name}}rowid-0" value="{{ '{{' + data.name + 'rowid}}' }}">
                         {{renderTableInput(data, False)}}
                         <button type="submit" class="btn btn-primary">Add</button>
                         <a href="/" class="btn btn-danger">Cancel</a>
@@ -36,22 +38,4 @@
             {{footerContent}}
         </footer>
     </body>
-    <script>
-        function newRow(el, dataName){
-            var inputSet = el.parentElement;
-            nextRowId = el.getAttribute("nextRow");
-            el.setAttribute("nextRow", nextRowId + 1);
-            row0 = document.getElementsByName(dataName + "row0")[0];
-            rowN = row0.cloneNode(true);
-            rowN.setAttribute("name", nextRowId)
-            for(child of rowN.children){
-                if(child.classList.contains("mb-3")){
-                    input = child.children[1].children[0];
-                    input.name = input.name.replace(/.$/, nextRowId);
-                }
-            }
-            rowN.children[0].name = rowN.children[0].name.replace(/.$/, nextRowId);
-            inputSet.insertBefore(rowN, el);
-        }
-    </script>
 </html>

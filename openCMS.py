@@ -19,10 +19,10 @@ def __renderTableInput(dataType:'dataType', showBtn:bool) -> str:
 def __isField(object) -> bool:
     return isinstance(object, field) or isinstance(object, foreignField)
 
-def __getIndexWhereName(name:str, list:list['field']) -> str:
+def __getIndexWhereName(name:str, list:list['field']) -> int:
     for idx, item in enumerate(list):
         if item.name == name:
-            return str(idx + 1)
+            return idx + 1
 
 #so that's something cool: we import python functions into jinja
 environment.globals['renderTable'] = __renderTable
@@ -95,13 +95,13 @@ submitNewCodeStart = """
 
 #code for handling the submission of a non multi Row datatype
 submitTypeCode = """
-    rowRowid = data['%srowid0']
+    rowRowid = data['%srowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "%s" VALUES (%s)'
         cur.execute(sql, (%s,))
     else:
         sql = 'UPDATE "%s" SET %s WHERE rowid=?'
-        values = (%s,)
+        values = [%s,]
         values.append(rowRowid)
         cur.execute(sql, values)
     %slastRowid = cur.lastrowid
@@ -110,10 +110,10 @@ submitTypeCode = """
 #code for handling the submission of multi Row datatype
 submitMultiRowCode = """
     i = 0
-    while '%srowid' + str(i) in data.keys():
+    while '%srowid' + '-' + str(i) in data.keys():
         fields = (%s)
-        values = [%slastRowid if f=='rowid' else data["%s" + f + str(i)] for f in fields]
-        rowRowid = data['%srowid' + str(i)]
+        values = [%slastRowid if f=='rowid' else data["%s" + f + '-' + str(i)] for f in fields]
+        rowRowid = data['%srowid-' + str(i)]
         if rowRowid == '':
             sql = 'INSERT INTO "%s" VALUES (%s)'
             cur.execute(sql, values)
@@ -130,32 +130,21 @@ submitNewCodeEnd = """
     return redirect('/')
     """
 
-#i have decided that the submit code is now so comploicated and convoluted
-#it now needs it's own recursive function :)
-def submitCodeFromClass(type:'dataType', multiRow:bool=False) -> str:
-    code = ""
-    plainFields = [f for f in type.fields if not isinstance(f, dataType)]
-    SQLplaceholder = ', '.join('?' * len(plainFields))
-    SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields))
-    if not multiRow:
-        SQLvalueGetter = ', '.join(('data["%s%s0"]' % (type.name, f.name) for f in plainFields))
-        code += submitTypeCode % (type.name, type.name, SQLplaceholder, SQLvalueGetter, type.name, SQLupdatePlaceholder,
-                                   SQLvalueGetter, type.name)
-    else:
-        code += submitMultiRowCode % (type.name, ', '.join(("'%s'" % f.name for f in type.fields if not isinstance(f, dataType))),
-                                       type.primary.referencedTable.name, type.name, type.name, type.name, SQLplaceholder,
-                                         type.name, SQLupdatePlaceholder)
-    for t in (t for t in type.fields if isinstance(t, dataType)):
-        code += submitCodeFromClass(t, dataType in (f.__class__ for f in type.fields))
-    return code
-
 #code serving the edit endpoint
-editCode = """
+editCodeStart = """
     conn = getConn()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM "%s" WHERE rowid=?', (rowid, ))
-    data = cur.fetchall()[0]
-    return render_template('%s.html', data=data, rowid=rowid, encoding='utf-8')
+    cur.execute('SELECT rowid, * FROM "%s" WHERE rowid=?', (rowid, ))
+    data%s = cur.fetchall()[0]
+"""
+
+fetchSpecificCode = """
+    cur.execute('SELECT rowid, * FROM "%s" WHERE %s=?', (data%s[%d], ))
+    data%s = cur.fetchall()
+"""
+
+editCodeEnd = """
+    return render_template('%s.html', %srowid=rowid, %s, encoding='utf-8')
 """
 
 #code for calling the isAuthorised function
@@ -203,6 +192,10 @@ class field:
     def resetDisplayName(self) -> None:
         """Resets the display name to the normal name"""
         self.displayName = self.name
+
+    def setUnique(self, isUnique:bool) -> None:
+        """Sets the unique property"""
+        self.unique = isUnique
 
 class foreignField(field):
     """A field referencing a field in a different table. Creates a foreign key in SQL"""
@@ -267,6 +260,8 @@ class dataType:
             self.primary = newPrimary
         if newPrimary not in self.fields:
             raise ValueError("Provided newPrimary field doesn't belong in this dataType")
+        if isinstance(self.primary, foreignField) and self.isChild:
+            raise Exception("This dataType is a child and changing primary fields for children is forbidden")
         self.primary = newPrimary    
         newPrimary.unique = True
         if self.fields[0] != newPrimary: #swap the first field in the list with the new Primary one
@@ -290,6 +285,7 @@ class dataType:
         newDataField.setPrimary(pForeign)
         pForeign.unique = False
         self.fields.append(newDataField)
+        newDataField.isChild = True
 
     def addChild(self, child:'dataType') -> None:
         """Sets the provided datatype as a child to this datatype"""
@@ -297,7 +293,6 @@ class dataType:
             raise TypeError('The provided child is not a dataType, but a %s' % child.__class__.__name__)
         if child in self.children:
             raise ValueError('The provided child is already a child')
-        child.isChild = True
         self.children.append(child)
         for childField in child.fields:
             if childField.name == self.name:
@@ -306,7 +301,48 @@ class dataType:
         child.fields[0] = self.getPrimaryForeignField()
         child.fields.append(first)
         child.parentName = child.fields[0].name
+        child.isChild = True
         #return child
+
+    #i have decided that the submit code is now so comploicated and convoluted
+    #it now needs it's own recursive function :)
+    def __submitCodeFromClass(self, multiRow:bool=False) -> str:
+        """Recursive method for generating code in the middle of the submit backend from a datatype"""
+        code = ""
+        plainFields = [f for f in self.fields if not isinstance(f, dataType)]
+        SQLplaceholder = ', '.join('?' * len(plainFields))
+        SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields))
+        if not multiRow:
+            SQLvalueGetter = ', '.join(('data["%s%s-0"]' % (self.name, f.name) for f in plainFields))
+            code += submitTypeCode % (self.name, self.name, SQLplaceholder, SQLvalueGetter, self.name, SQLupdatePlaceholder,
+                                    SQLvalueGetter, self.name)
+        else:
+            code += submitMultiRowCode % (self.name, ', '.join(("'%s'" % f.name for f in self.fields if not isinstance(f, dataType))),
+                                        self.primary.referencedTable.name, self.name, self.name, self.name, SQLplaceholder,
+                                            self.name, SQLupdatePlaceholder)
+        for t in (t for t in self.fields if isinstance(t, dataType)):
+            code += t.__submitCodeFromClass(dataType in (f.__class__ for f in self.fields))
+        return code
+
+    def __editCodeFromClass(self) -> str:
+        """Recursive method for generating backend code for the edit endpoint from a datatype.\\
+            Note the fact that this is not meant to operate on the primary datatype of a datapage, but it's field-children"""
+        if self.primary.name == 'rowid' and self.primary.referencedField!=self.primary.name:
+            code = fetchSpecificCode % (self.name, self.primary.name, self.primary.referencedTable.name, 0, self.name)
+        else:
+            code = fetchSpecificCode % (self.name, self.primary.name, self.primary.referencedTable.name, 
+                                    self.primary.referencedTable.fields.index(self.primary.referencedField),
+                                    self.name)
+        for t in (t for t in self.fields if isinstance(t, dataType)):
+            code += t.__editCodeFromClass()
+        return code 
+
+    def __generateValuePasser(self) -> list:
+        """Recursive method generating a line of code that passes the variables to render_template"""
+        valuePasser = ["data%s=data%s" % (self.name, self.name)]
+        for t in (t for t in self.fields if isinstance(t, dataType)):
+            valuePasser += t.__generateValuePasser()
+        return valuePasser
 
     def render(self, pages:list['page'], pythonFile:io.FileIO = None, authLevel:int=0) -> None:
         """Creates the neccesary endpoints and html templates for this dataType"""
@@ -328,12 +364,15 @@ class dataType:
             pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
             pythonFile.write(authCheck % authLevel)
             pythonFile.write(submitNewCodeStart)
-            pythonFile.write(submitCodeFromClass(self))
+            pythonFile.write(self.__submitCodeFromClass())
             pythonFile.write(submitNewCodeEnd)
             #edit form
             pythonFile.write(argsPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
             pythonFile.write(authCheck % authLevel)
-            pythonFile.write(editCode % (self.name, self.name))
+            pythonFile.write(editCodeStart % (self.name, self.name))
+            for t in (t for t in self.fields if isinstance(t, dataType)):
+                pythonFile.write(t.__editCodeFromClass())
+            pythonFile.write(editCodeEnd % (self.name, self.name, ', '.join(self.__generateValuePasser())))
 
 class page:
     """A static page in the CSM with preset content"""

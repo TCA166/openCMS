@@ -37,7 +37,7 @@
                         {%if child.parentName == 'rowid'%}
                         <a href="/new/{{child.name}}/{{'{{item[0]}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
                         {%else%}
-                        <a href="/new/{{child.name}}/{{'{{item[' + getIndexWhereName(child.parentName, data.fields) + ']}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
+                        <a href="/new/{{child.name}}/{{'{{item[' + getIndexWhereName(child.parentName, data.fields)|string + ']}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>
                         {%endif%}
                     {%endfor%}
                 </td>
