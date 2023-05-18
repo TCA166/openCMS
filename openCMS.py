@@ -99,12 +99,13 @@ submitTypeCode = """
     if rowRowid == '':
         sql = 'INSERT INTO "%s" VALUES (%s)'
         cur.execute(sql, (%s,))
+        %slastRowid = cur.lastrowid
     else:
         sql = 'UPDATE "%s" SET %s WHERE rowid=?'
         values = [%s,]
         values.append(rowRowid)
         cur.execute(sql, values)
-    %slastRowid = cur.lastrowid
+        %slastRowid = rowRowid
     """
 
 #code for handling the submission of multi Row datatype
@@ -112,16 +113,20 @@ submitMultiRowCode = """
     i = 0
     while '%srowid' + '-' + str(i) in data.keys():
         fields = (%s)
-        values = [%slastRowid if f=='rowid' else data["%s" + f + '-' + str(i)] for f in fields]
+        values = [%slastRowid if f=='rowid%s' else data["%s" + f + '-' + str(i)] for f in fields]
         rowRowid = data['%srowid-' + str(i)]
         if rowRowid == '':
             sql = 'INSERT INTO "%s" VALUES (%s)'
             cur.execute(sql, values)
+            %slastRowid = cur.lastrowid
         else:
             sql = 'UPDATE "%s" SET %s WHERE rowid=?'
+            values.pop(%d)
             values.append(rowRowid)
             cur.execute(sql, values)
+            %slastRowid = rowRowid
         i += 1
+    
     """
 
 #end of the code for the submit endpoint
@@ -246,7 +251,7 @@ class dataType:
         else:
             #we are going to work around our own restrictions
             rowidField = foreignField(self.fields[0], self)
-            rowidField.name = 'rowid'
+            rowidField.name = 'rowid' + self.name
             rowidField.htmlType = 'text'
             rowidField.fieldType = 'INTEGER'
             rowidField.filtrable = True
@@ -297,10 +302,10 @@ class dataType:
         for childField in child.fields:
             if childField.name == self.name:
                 raise ValueError('Overlapping field names %s while attemting to addChild(). Field names of children cannot be named the same as the parent dataType' % self.name)
-        first = child.fields[0]
-        child.fields[0] = self.getPrimaryForeignField()
-        child.fields.append(first)
-        child.parentName = child.fields[0].name
+        newField = self.getPrimaryForeignField()
+        child.addField(newField)
+        child.setPrimary(newField)
+        child.parentName = child.primary.name
         child.isChild = True
         #return child
 
@@ -311,15 +316,16 @@ class dataType:
         code = ""
         plainFields = [f for f in self.fields if not isinstance(f, dataType)]
         SQLplaceholder = ', '.join('?' * len(plainFields))
-        SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields))
+        SQLupdatePlaceholder = ', '.join(('%s=?' % f.name for f in plainFields if not (isinstance(f, field) and self.primary==f)))
         if not multiRow:
             SQLvalueGetter = ', '.join(('data["%s%s-0"]' % (self.name, f.name) for f in plainFields))
-            code += submitTypeCode % (self.name, self.name, SQLplaceholder, SQLvalueGetter, self.name, SQLupdatePlaceholder,
+            code += submitTypeCode % (self.name, self.name, SQLplaceholder, SQLvalueGetter, self.name, self.name, SQLupdatePlaceholder,
                                     SQLvalueGetter, self.name)
         else:
             code += submitMultiRowCode % (self.name, ', '.join(("'%s'" % f.name for f in self.fields if not isinstance(f, dataType))),
-                                        self.primary.referencedTable.name, self.name, self.name, self.name, SQLplaceholder,
-                                            self.name, SQLupdatePlaceholder)
+                                         self.primary.referencedTable.name, self.primary.referencedTable.name, self.name, self.name,
+                                          self.name, SQLplaceholder, self.name, self.name, SQLupdatePlaceholder, self.fields.index(self.primary),
+                                          self.name)
         for t in (t for t in self.fields if isinstance(t, dataType)):
             code += t.__submitCodeFromClass(dataType in (f.__class__ for f in self.fields))
         return code

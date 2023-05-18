@@ -16,5 +16,6 @@ function newRow(el, dataName){
         }
     }
     rowN.children[0].name = rowN.children[0].name.split('-')[0] + '-' + nextRowId;
+    rowN.children[0].setAttribute("value", "")
     inputSet.insertBefore(rowN, el);
 }

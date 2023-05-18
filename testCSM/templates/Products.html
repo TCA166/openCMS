@@ -50,15 +50,15 @@
         <tr>
             
             
-            <th scope="col"><input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, 'rowid');">Client</th>
-            
-            
-            
-            <th scope="col">Price</th>
+            <th scope="col"><input type="text" class="form-control" placeholder="Filter" onchange="filtr(this.value, 'rowidClient');">Client</th>
             
             
             
             <th scope="col">Product name</th>
+            
+            
+            
+            <th scope="col">Price</th>
             
             
             
@@ -72,23 +72,25 @@
         {%for item in ProductRows%}
         {%set Productrow = item[0]%}
         
+        {%if Clientrow == item[1]%}
+        
             <tr name="row">
                 
                     
                     
-                    <td name="rowid">{{item[1]}}</td>
+                    <td name="rowidClient">{{item[1]}}</td>
                     
                     
                 
                     
                     
-                    <td name="Price">{{item[2]}}$</td>
+                    <td name="Product name">{{item[2]}}</td>
                     
                     
                 
                     
                     
-                    <td name="Product name">{{item[3]}}</td>
+                    <td name="Price">{{item[3]}}$</td>
                     
                     
                 
@@ -98,6 +100,8 @@
                 </td>
                 
             </tr>
+        
+        {%endif%}
         
         {%endfor%}
     </tbody>

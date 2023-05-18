@@ -92,9 +92,7 @@
         <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
             <label for="name" class="form-label">name</label>
             <div class="input-group">
-                
-                <input type="text" class="form-control" name="Productsname-0" id="name" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{row[2]}}" {%endif%}  >
-                
+                <input type="text" class="form-control" name="Productsname-0" id="name" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{dataProducts[2]}}" {%endif%}  >
                 
             </div>
         </div>
@@ -107,9 +105,7 @@
         <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
             <label for="count" class="form-label">count</label>
             <div class="input-group">
-                
-                <input type="text" class="form-control" name="Productscount-0" id="count" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{row[3]}}" {%endif%}  >
-                
+                <input type="text" class="form-control" name="Productscount-0" id="count" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{dataProducts[3]}}" {%endif%}  >
                 
             </div>
         </div>
@@ -136,7 +132,7 @@
             <label for="name" class="form-label">name</label>
             <div class="input-group">
                 
-                <input type="text" class="form-control" name="Productsname-{{loop.index0}}" id="name" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{row[2]}}" {%endif%}  >
+                <input type="text" class="form-control" name="Productsname-{{loop.index0}}" id="name" aria-describedby="addon"   value="{{row[2]}}"  >
                 
                 
             </div>
@@ -151,7 +147,7 @@
             <label for="count" class="form-label">count</label>
             <div class="input-group">
                 
-                <input type="text" class="form-control" name="Productscount-{{loop.index0}}" id="count" aria-describedby="addon"  {% if dataProducts is defined %}  value="{{row[3]}}" {%endif%}  >
+                <input type="text" class="form-control" name="Productscount-{{loop.index0}}" id="count" aria-describedby="addon"   value="{{row[3]}}"  >
                 
                 
             </div>

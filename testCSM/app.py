@@ -106,12 +106,13 @@ def ClientSubmit():
     if rowRowid == '':
         sql = 'INSERT INTO "Client" VALUES (?, ?, ?, ?)'
         cur.execute(sql, (data["ClientName-0"], data["ClientSurname-0"], data["ClientAge-0"], data["Clientuid-0"],))
+        ClientlastRowid = cur.lastrowid
     else:
         sql = 'UPDATE "Client" SET Name=?, Surname=?, Age=?, uid=? WHERE rowid=?'
         values = [data["ClientName-0"], data["ClientSurname-0"], data["ClientAge-0"], data["Clientuid-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
-    ClientlastRowid = cur.lastrowid
+        ClientlastRowid = rowRowid
     
     conn.commit()
     return redirect('/')
@@ -137,11 +138,11 @@ def Products():
     ProductRows = cur.fetchall()
     return render_template('Products.html', ProductRows=ProductRows, encoding='utf-8')
     
-@app.route('/new/Product/<rowid>', methods=['GET'])
-def Product(rowid):
+@app.route('/new/Product/<rowidClient>', methods=['GET'])
+def Product(rowidClient):
     if isAuthorised(0) == False:
         abort(401)
-    return render_template('Product.html', rowid=rowid, encoding='utf-8')
+    return render_template('Product.html', rowidClient=rowidClient, encoding='utf-8')
     
 @app.route('/new/Product/submit', methods=['POST'])
 def ProductSubmit():
@@ -153,13 +154,14 @@ def ProductSubmit():
     rowRowid = data['Productrowid-0']
     if rowRowid == '':
         sql = 'INSERT INTO "Product" VALUES (?, ?, ?)'
-        cur.execute(sql, (data["Productrowid-0"], data["ProductPrice-0"], data["ProductProduct name-0"],))
+        cur.execute(sql, (data["ProductrowidClient-0"], data["ProductProduct name-0"], data["ProductPrice-0"],))
+        ProductlastRowid = cur.lastrowid
     else:
-        sql = 'UPDATE "Product" SET rowid=?, Price=?, Product name=? WHERE rowid=?'
-        values = [data["Productrowid-0"], data["ProductPrice-0"], data["ProductProduct name-0"],]
+        sql = 'UPDATE "Product" SET Product name=?, Price=? WHERE rowid=?'
+        values = [data["ProductrowidClient-0"], data["ProductProduct name-0"], data["ProductPrice-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
-    ProductlastRowid = cur.lastrowid
+        ProductlastRowid = rowRowid
     
     conn.commit()
     return redirect('/')
@@ -202,12 +204,13 @@ def superSecretSubmit():
     if rowRowid == '':
         sql = 'INSERT INTO "superSecret" VALUES (?)'
         cur.execute(sql, (data["superSecretSecret-0"],))
+        superSecretlastRowid = cur.lastrowid
     else:
         sql = 'UPDATE "superSecret" SET Secret=? WHERE rowid=?'
         values = [data["superSecretSecret-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
-    superSecretlastRowid = cur.lastrowid
+        superSecretlastRowid = rowRowid
     
     conn.commit()
     return redirect('/')
@@ -252,26 +255,31 @@ def orderSubmit():
     if rowRowid == '':
         sql = 'INSERT INTO "order" VALUES (?)'
         cur.execute(sql, (data["ordername-0"],))
+        orderlastRowid = cur.lastrowid
     else:
         sql = 'UPDATE "order" SET name=? WHERE rowid=?'
         values = [data["ordername-0"],]
         values.append(rowRowid)
         cur.execute(sql, values)
-    orderlastRowid = cur.lastrowid
+        orderlastRowid = rowRowid
     
     i = 0
     while 'Productsrowid' + '-' + str(i) in data.keys():
-        fields = ('rowid', 'name', 'count')
-        values = [orderlastRowid if f=='rowid' else data["Products" + f + '-' + str(i)] for f in fields]
+        fields = ('rowidorder', 'name', 'count')
+        values = [orderlastRowid if f=='rowidorder' else data["Products" + f + '-' + str(i)] for f in fields]
         rowRowid = data['Productsrowid-' + str(i)]
         if rowRowid == '':
             sql = 'INSERT INTO "Products" VALUES (?, ?, ?)'
             cur.execute(sql, values)
+            ProductslastRowid = cur.lastrowid
         else:
-            sql = 'UPDATE "Products" SET rowid=?, name=?, count=? WHERE rowid=?'
+            sql = 'UPDATE "Products" SET name=?, count=? WHERE rowid=?'
+            values.pop(0)
             values.append(rowRowid)
             cur.execute(sql, values)
+            ProductslastRowid = rowRowid
         i += 1
+    
     
     conn.commit()
     return redirect('/')
@@ -285,7 +293,7 @@ def orderEdit(rowid):
     cur.execute('SELECT rowid, * FROM "order" WHERE rowid=?', (rowid, ))
     dataorder = cur.fetchall()[0]
 
-    cur.execute('SELECT rowid, * FROM "Products" WHERE rowid=?', (dataorder[0], ))
+    cur.execute('SELECT rowid, * FROM "Products" WHERE rowidorder=?', (dataorder[0], ))
     dataProducts = cur.fetchall()
 
     return render_template('order.html', orderrowid=rowid, dataorder=dataorder, dataProducts=dataProducts, encoding='utf-8')

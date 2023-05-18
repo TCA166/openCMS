@@ -19,7 +19,7 @@
         {{'{%for item in ' + data.name + 'Rows%}'}}
         {{'{%set ' + data.name + 'row = item[0]%}'}}
         {%if data.primary.referencedTable is defined%}
-        {{'{%if ' + data.primary.referencedTable.name +'row == item[0]%}'}}
+        {{'{%if ' + data.primary.referencedTable.name +'row == item[' + (getIndexWhereName(data.primary.name, data.fields))|string + ']%}'}}
         {%endif%}
             <tr name="row">
                 {%for thisField in data.fields%}

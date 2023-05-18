@@ -13,9 +13,7 @@
         <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
             <label for="{{field.name}}" class="form-label">{{field.displayName}}</label>
             <div class="input-group">
-                {%if showBtn%}
-                <input type="{{field.htmlType}}" class="form-control" name="{{data.name}}{{field.name}}-0" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data' + data.name + ' is defined %}  value="{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
-                {%endif%}
+                <input type="{{field.htmlType}}" class="form-control" name="{{data.name}}{{field.name}}-0" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data' + data.name + ' is defined %}  value="{{data' + data.name + '[' + getIndexWhereName(field.name, data.fields)|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
                 {%if field.unit != ''%}
                 <span class="input-group-text" id="addon{{field.unit}}">{{field.unit}}</span>
                 {%endif%}
@@ -45,7 +43,7 @@
             <label for="{{field.name}}" class="form-label">{{field.displayName}}</label>
             <div class="input-group">
                 {%if showBtn%}
-                <input type="{{field.htmlType}}" class="form-control" name="{{data.name}}{{field.name}}-{{'{{loop.index0}}'}}" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data' + data.name + ' is defined %}  value="{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
+                <input type="{{field.htmlType}}" class="form-control" name="{{data.name}}{{field.name}}-{{'{{loop.index0}}'}}" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}{%endif%}' }}"{%else%}  value="{{'{{row[' + getIndexWhereName(field.name, data.fields)|string + ']}}"' }} {%endif%} {%if field.required%}required{%endif%}>
                 {%else%}
                 <input type="{{field.htmlType}}" class="form-control" name="{{data.name}}{{field.name}}-0" id="{{field.name}}" aria-describedby="addon{{field.unit}}" {% if field.name==data.parentName %} readonly value="{{ '{%if ' + field.name + ' is defined %}{{' + field.name + '}}{%else%}{{data' + data.name + '[' + count.value|string + ']}}{%endif%}' }}"{%else%}{{ ' {% if data' + data.name + ' is defined %}  value="{{data' + data.name + '[' + count.value|string + ']}}" {%endif%}' }} {%endif%} {%if field.required%}required{%endif%}>
                 {%endif%}

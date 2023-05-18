@@ -60,10 +60,25 @@
         
         
         <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-            <label for="rowid" class="form-label">Client</label>
+            <label for="rowidClient" class="form-label">Client</label>
             <div class="input-group">
                 
-                <input type="text" class="form-control" name="Productrowid-0" id="rowid" aria-describedby="addon"  readonly value="{%if rowid is defined %}{{rowid}}{%else%}{{dataProduct[1]}}{%endif%}" required>
+                <input type="text" class="form-control" name="ProductrowidClient-0" id="rowidClient" aria-describedby="addon"  readonly value="{%if rowidClient is defined %}{{rowidClient}}{%else%}{{dataProduct[1]}}{%endif%}" required>
+                
+                
+            </div>
+        </div>
+        
+        
+        
+        
+        
+        
+        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
+            <label for="Product name" class="form-label">Product name</label>
+            <div class="input-group">
+                
+                <input type="text" class="form-control" name="ProductProduct name-0" id="Product name" aria-describedby="addon"  {% if dataProduct is defined %}  value="{{dataProduct[2]}}" {%endif%}  >
                 
                 
             </div>
@@ -78,25 +93,10 @@
             <label for="Price" class="form-label">Price</label>
             <div class="input-group">
                 
-                <input type="number" class="form-control" name="ProductPrice-0" id="Price" aria-describedby="addon$"  {% if dataProduct is defined %}  value="{{dataProduct[2]}}" {%endif%}  >
+                <input type="number" class="form-control" name="ProductPrice-0" id="Price" aria-describedby="addon$"  {% if dataProduct is defined %}  value="{{dataProduct[3]}}" {%endif%}  >
                 
                 
                 <span class="input-group-text" id="addon$">$</span>
-                
-            </div>
-        </div>
-        
-        
-        
-        
-        
-        
-        <div class="mb-3" style="display: inline-block; width:auto; min-width:33%">
-            <label for="Product name" class="form-label">Product name</label>
-            <div class="input-group">
-                
-                <input type="text" class="form-control" name="ProductProduct name-0" id="Product name" aria-describedby="addon"  {% if dataProduct is defined %}  value="{{dataProduct[3]}}" {%endif%}  >
-                
                 
             </div>
         </div>
