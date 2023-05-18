@@ -32,7 +32,11 @@
                     {%endif%}
                 {%endfor%}
                 {%if showBtn%}
-                <td><a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> <form action="/copy/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                <td>
+                    <a href="/edit/{{data.name}}/{{'{{item[0]}}'}}" class="btn btn-warning" style="width:100%;">Edit</a> 
+                    {%if data.copiable%}
+                    <form action="/copy/{{data.name}}/{{'{{item[0]}}'}}" method="post"><button type="submit" class="btn btn-info" style="width:100%;">Copy</button></form>
+                    {%endif%}
                     {%for child in data.children%}
                         {%if child.parentName == 'rowid'%}
                         <a href="/new/{{child.name}}/{{'{{item[0]}}'}}" class="btn btn-success" style="width:100%;">New {{child.name}}</a>

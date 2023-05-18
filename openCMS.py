@@ -55,8 +55,8 @@ argsPageCodeStart = """
 @app.route('/%s', methods=['GET'])
 def %s(%s):"""
 
-#code needed in the dataPage backend
-dataPageCode = """
+#code needed to connect to the database
+dbConnectCode = """
     conn = getConn()
     cur = conn.cursor()"""
 
@@ -85,12 +85,10 @@ fetchPageCode = """
 #generic code for a POST page
 postPageCodeStart = """
 @app.route('/%s', methods=['POST'])
-def %s():"""
+def %s(%s):"""
 
 #start of the code for a submit endpoint
 submitNewCodeStart = """
-    conn = getConn()
-    cur = conn.cursor()
     data = dict(request.form)"""
 
 #code for handling the submission of a non multi Row datatype
@@ -137,8 +135,6 @@ submitNewCodeEnd = """
 
 #code serving the edit endpoint
 editCodeStart = """
-    conn = getConn()
-    cur = conn.cursor()
     cur.execute('SELECT rowid, * FROM "%s" WHERE rowid=?', (rowid, ))
     data%s = cur.fetchall()[0]
 """
@@ -156,6 +152,14 @@ editCodeEnd = """
 authCheck = """
     if isAuthorised(%s) == False:
         abort(401)"""
+
+#Sqlite is a bit overprotective and refuses to insert anything into a table
+#Code for the copy endpoint
+copyCode = """
+    cur.execute("PRAGMA foreign_keys = OFF;")
+    cur.execute("INSERT INTO %s SELECT * FROM %s WHERE rowid=?", rowid)
+    cur.execute("PRAGMA foreign_keys = ON;")
+"""
 
 #static code that is appended once at the bottom of the backend code
 codeFooter = """
@@ -235,6 +239,11 @@ class dataType:
         self.parentName = ''
         self.primary = None #None = rowid
         self.displayName = name
+        self.copiable = True
+
+    def setCopiable(self, isCopiable:bool) -> None:
+        """Sets if this datatype should be copiable."""
+        self.copiable = isCopiable
 
     def getForeignField(self, referencedField:field) -> foreignField:
         """Returns a new foreign field object created based on the given field"""
@@ -310,7 +319,7 @@ class dataType:
         #return child
 
     #i have decided that the submit code is now so comploicated and convoluted
-    #it now needs it's own recursive function :)
+    #it now needs it's own recursive method :)
     def __submitCodeFromClass(self, multiRow:bool=False) -> str:
         """Recursive method for generating code in the middle of the submit backend from a datatype"""
         code = ""
@@ -367,18 +376,27 @@ class dataType:
                 pythonFile.write(authCheck % authLevel)
                 pythonFile.write(genericPageCode % self.name)
             #submit form
-            pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit'))
+            pythonFile.write(postPageCodeStart % ('new/%s/submit' % self.name, self.name + 'Submit', ''))
             pythonFile.write(authCheck % authLevel)
+            pythonFile.write(dbConnectCode)
             pythonFile.write(submitNewCodeStart)
             pythonFile.write(self.__submitCodeFromClass())
             pythonFile.write(submitNewCodeEnd)
             #edit form
             pythonFile.write(argsPageCodeStart % ('edit/%s/<rowid>' % self.name, self.name + 'Edit', 'rowid'))
             pythonFile.write(authCheck % authLevel)
+            pythonFile.write(dbConnectCode)
             pythonFile.write(editCodeStart % (self.name, self.name))
             for t in (t for t in self.fields if isinstance(t, dataType)):
                 pythonFile.write(t.__editCodeFromClass())
             pythonFile.write(editCodeEnd % (self.name, self.name, ', '.join(self.__generateValuePasser())))
+            #copy endpoint
+            if self.copiable:
+                pythonFile.write(postPageCodeStart % ('copy/%s/<rowid>' % self.name, self.name + 'copy', 'rowid'))
+                pythonFile.write(authCheck % authLevel)
+                pythonFile.write(dbConnectCode)
+                pythonFile.write(copyCode % (self.name, self.name))
+                pythonFile.write(submitNewCodeEnd)
 
 class page:
     """A static page in the CSM with preset content"""
@@ -445,7 +463,7 @@ class dataPage(page):
             dataTypeFields = [f for f in self.dataType.fields if isinstance(f, dataType)]
             t = ['%sRows=%sRows' % (f.name, f.name) for f in dataTypeFields]
             t.append('%sRows=%sRows' % (self.dataType.name, self.dataType.name))
-            pythonFile.write(dataPageCode)
+            pythonFile.write(dbConnectCode)
             pythonFile.write(sqlFetchCode % (self.dataType.name, self.dataType.name))
             for f in dataTypeFields:
                 pythonFile.write(sqlFetchCode % (f.name, f.name))

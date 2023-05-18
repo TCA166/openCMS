@@ -128,6 +128,19 @@ def ClientEdit(rowid):
 
     return render_template('Client.html', Clientrowid=rowid, dataClient=dataClient, encoding='utf-8')
 
+@app.route('/copy/Client/<rowid>', methods=['POST'])
+def Clientcopy(rowid):
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute("PRAGMA foreign_keys = OFF;")
+    cur.execute("INSERT INTO Client SELECT * FROM Client WHERE rowid=?", rowid)
+    cur.execute("PRAGMA foreign_keys = ON;")
+
+    conn.commit()
+    return redirect('/')
+    
 @app.route('/Products', methods=['GET'])
 def Products():
     if isAuthorised(0) == False:
@@ -177,6 +190,19 @@ def ProductEdit(rowid):
 
     return render_template('Product.html', Productrowid=rowid, dataProduct=dataProduct, encoding='utf-8')
 
+@app.route('/copy/Product/<rowid>', methods=['POST'])
+def Productcopy(rowid):
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute("PRAGMA foreign_keys = OFF;")
+    cur.execute("INSERT INTO Product SELECT * FROM Product WHERE rowid=?", rowid)
+    cur.execute("PRAGMA foreign_keys = ON;")
+
+    conn.commit()
+    return redirect('/')
+    
 @app.route('/secretPage', methods=['GET'])
 def secretPage():
     if isAuthorised(1) == False:
@@ -226,6 +252,19 @@ def superSecretEdit(rowid):
 
     return render_template('superSecret.html', superSecretrowid=rowid, datasuperSecret=datasuperSecret, encoding='utf-8')
 
+@app.route('/copy/superSecret/<rowid>', methods=['POST'])
+def superSecretcopy(rowid):
+    if isAuthorised(1) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute("PRAGMA foreign_keys = OFF;")
+    cur.execute("INSERT INTO superSecret SELECT * FROM superSecret WHERE rowid=?", rowid)
+    cur.execute("PRAGMA foreign_keys = ON;")
+
+    conn.commit()
+    return redirect('/')
+    
 @app.route('/Orders', methods=['GET'])
 def Orders():
     if isAuthorised(0) == False:
@@ -298,6 +337,19 @@ def orderEdit(rowid):
 
     return render_template('order.html', orderrowid=rowid, dataorder=dataorder, dataProducts=dataProducts, encoding='utf-8')
 
+@app.route('/copy/order/<rowid>', methods=['POST'])
+def ordercopy(rowid):
+    if isAuthorised(0) == False:
+        abort(401)
+    conn = getConn()
+    cur = conn.cursor()
+    cur.execute("PRAGMA foreign_keys = OFF;")
+    cur.execute("INSERT INTO order SELECT * FROM order WHERE rowid=?", rowid)
+    cur.execute("PRAGMA foreign_keys = ON;")
+
+    conn.commit()
+    return redirect('/')
+    
 @app.route('/jsonDisplay', methods=['GET'])
 def jsonDisplay():
     if isAuthorised(0) == False:
